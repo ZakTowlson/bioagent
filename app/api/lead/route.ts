@@ -40,23 +40,9 @@ export async function POST(req: Request) {
 
   console.log("[lead] captured:", { email, name, answers: history.length, at });
 
-  // --- Save to Google Sheet (via an Apps Script web app webhook) ---
-  if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
-    try {
-      await fetch(process.env.GOOGLE_SHEET_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ at, name, email, answers: transcript }),
-      });
-    } catch (err) {
-      console.error("[lead] google sheet save failed:", err);
-      // Don't fail the signup if the sheet is unreachable.
-    }
-  }
-
   // --- Generate the full reflection (the reward for signing up) ---
-  // Only generated here, after capture, so it's never sent to the browser
-  // before the email is given.
+  // Generated here, after capture, so it's never sent to the browser before
+  // the email is given — and so it can also be saved to the sheet as SUMMARY.
   let reflection = "";
   if (process.env.OPENAI_API_KEY && history.length >= TOTAL_QUESTIONS) {
     try {
@@ -67,6 +53,27 @@ export async function POST(req: Request) {
     } catch (err) {
       console.error("[lead] reflection generation failed:", err);
       // Don't fail the signup — fall back to emailing it.
+    }
+  }
+
+  // --- Save to Google Sheet (via an Apps Script web app webhook) ---
+  // Columns: Timestamp | Name | Email | Summary (the full reflection; falls
+  // back to the raw answers if the reflection couldn't be generated).
+  if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
+    try {
+      await fetch(process.env.GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          at,
+          name,
+          email,
+          summary: reflection || transcript,
+        }),
+      });
+    } catch (err) {
+      console.error("[lead] google sheet save failed:", err);
+      // Don't fail the signup if the sheet is unreachable.
     }
   }
 
