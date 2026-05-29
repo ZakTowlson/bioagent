@@ -8,8 +8,9 @@ function getClient(): OpenAI {
   return _client;
 }
 
-// NOTE: gpt-5-* models require OpenAI org ID verification. gpt-4o-mini does not.
-export const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+// gpt-4o follows the nuanced question style far better than gpt-4o-mini.
+// NOTE: gpt-5-* models require OpenAI org ID verification; gpt-4o does not.
+export const MODEL = process.env.OPENAI_MODEL || "gpt-4o";
 
 export type Exchange = { question: string; answer: string };
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { complete, type Exchange } from "@/lib/openai";
+import { complete, MODEL, type Exchange } from "@/lib/openai";
 import { TOTAL_QUESTIONS } from "@/lib/persona";
-import { questionMessages, questionSystemPrompt } from "@/lib/prompts";
+import { PROMPT_VERSION, questionMessages, questionSystemPrompt } from "@/lib/prompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       question,
       index: history.length + 1,
       total: TOTAL_QUESTIONS,
+      meta: { model: MODEL, promptVersion: PROMPT_VERSION },
     });
   } catch (err) {
     const e = err as { status?: number; code?: string; message?: string };

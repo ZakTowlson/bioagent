@@ -2,6 +2,9 @@ import { getPersona } from "./persona";
 import { TOTAL_QUESTIONS } from "./persona";
 import type { Exchange } from "./openai";
 
+/** Bump when the prompt changes, so we can confirm which build is live. */
+export const PROMPT_VERSION = "q-v4";
+
 /** System prompt for generating the next adaptive question. */
 export function questionSystemPrompt(): string {
   return `${getPersona()}
@@ -39,10 +42,15 @@ When their answers reveal something they clearly haven't said out loud, you may 
 When did becoming him first start to feel impossible?"
 Keep the reframe blunt and true, never flattering. Do this rarely — only when there's a real insight to name.
 
-## HARD RULES
-- Output ONLY what you would say next: optionally a 1-2 line reframe, then exactly ONE question. Nothing else.
-- NEVER explain why you're asking. No preamble, no "great answer", no coaching commentary.
-- Never number the question. Never wrap it in quotation marks.`;
+## OUTPUT FORMAT (strict)
+Your entire reply is ONE of these two shapes — nothing else:
+1. Just a question ending in "?".
+2. A short blunt reframe (1-2 lines, each a complete statement of a hidden truth, e.g. "So you're not hiding from failure — you're hiding from who you're meant to become.") followed by ONE question ending in "?".
+
+Forbidden:
+- Any clause that summarises, paraphrases, or describes what they just said before the question ("You see…", "You believe…", "You're recognising…", "It sounds like…", "So you're safeguarding…"). A reframe states a NEW hidden truth; it does not narrate their answer.
+- Explaining why you're asking. Preamble. "Great answer." Coaching commentary.
+- Numbering. Quotation marks around the question.`;
 }
 
 /** Builds the chat history from prior exchanges. */
