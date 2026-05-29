@@ -12,7 +12,7 @@ export default function Home() {
   const [history, setHistory] = useState<Exchange[]>([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [insight, setInsight] = useState("");
+  const [teaser, setTeaser] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,7 +66,7 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setInsight(data.insight);
+      setTeaser(data.teaser);
       setStage("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -95,7 +95,7 @@ export default function Home() {
       {stage === "reflecting" && <Reflecting />}
 
       {stage === "result" && (
-        <Result insight={insight} history={history} error={error} />
+        <Result teaser={teaser} history={history} error={error} />
       )}
     </main>
   );
@@ -216,11 +216,11 @@ function Reflecting() {
 }
 
 function Result({
-  insight,
+  teaser,
   history,
   error,
 }: {
-  insight: string;
+  teaser: string;
   history: Exchange[];
   error: string;
 }) {
@@ -229,6 +229,7 @@ function Result({
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [reflection, setReflection] = useState("");
 
   async function submitLead() {
     if (submitting) return;
@@ -238,10 +239,11 @@ function Result({
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, history, insight }),
+        body: JSON.stringify({ email, name, history }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      setReflection(data.reflection || "");
       setSent(true);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
@@ -253,32 +255,42 @@ function Result({
   return (
     <div>
       <p className="mb-4 text-sm uppercase tracking-[0.3em] text-accent">
-        Your reflection
+        {sent ? "Your full reflection" : "What I saw"}
       </p>
 
       {error ? (
         <p className="mb-8 text-foreground/70">{error}</p>
-      ) : (
-        <div className="mb-10 space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
-          {insight.split("\n").filter(Boolean).map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
+      ) : sent ? (
+        // After signup: show the full reflection (or a graceful fallback).
+        <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
+          {reflection ? (
+            reflection
+              .split("\n")
+              .filter(Boolean)
+              .map((p, i) => <p key={i}>{p}</p>)
+          ) : (
+            <p>
+              Thank you — your reflection is on its way to your inbox. Read it
+              slowly when you have a quiet moment.
+            </p>
+          )}
         </div>
-      )}
+      ) : (
+        // Before signup: show only the intriguing teaser, then the gate.
+        <>
+          <div className="mb-10 space-y-4 font-serif text-xl leading-relaxed text-foreground/90">
+            {teaser.split("\n").filter(Boolean).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
 
-      <div className="rounded-2xl border border-foreground/15 bg-foreground/5 p-6">
-        {sent ? (
-          <p className="text-center font-serif text-lg text-foreground/90">
-            Thank you. I&apos;ll be in touch.
-          </p>
-        ) : (
-          <>
+          <div className="rounded-2xl border border-foreground/15 bg-foreground/5 p-6">
             <h3 className="mb-2 font-serif text-xl">
-              Want to go further with this?
+              There&apos;s something I want to show you.
             </h3>
             <p className="mb-5 font-sans text-sm text-foreground/60">
-              Leave your email and I&apos;ll send you the full reflection and a way
-              to continue the conversation.
+              Leave your email and I&apos;ll reveal the full reflection — what
+              your answers quietly pointed to, and where to go from here.
             </p>
             <div className="flex flex-col gap-3">
               <input
@@ -303,12 +315,12 @@ function Result({
                 disabled={submitting}
                 className="rounded-full bg-accent px-7 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
               >
-                {submitting ? "Sending…" : "Send me the reflection"}
+                {submitting ? "Revealing…" : "Reveal my reflection"}
               </button>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

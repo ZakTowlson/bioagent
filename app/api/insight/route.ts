@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { complete, type Exchange } from "@/lib/openai";
 import { TOTAL_QUESTIONS } from "@/lib/persona";
-import { insightMessages, insightSystemPrompt } from "@/lib/prompts";
+import { insightMessages, teaserSystemPrompt } from "@/lib/prompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -30,15 +30,22 @@ export async function POST(req: Request) {
   }
 
   try {
-    const insight = await complete(
-      insightSystemPrompt(),
-      insightMessages(history),
-    );
-    return NextResponse.json({ insight });
+    const teaser = await complete(teaserSystemPrompt(), insightMessages(history));
+    if (!teaser) {
+      return NextResponse.json(
+        { error: "The model returned an empty teaser." },
+        { status: 502 },
+      );
+    }
+    return NextResponse.json({ teaser });
   } catch (err) {
-    console.error("insight route error:", err);
+    const e = err as { status?: number; code?: string; message?: string };
+    console.error("insight route error:", e?.status, e?.code, e?.message);
     return NextResponse.json(
-      { error: "Could not generate the reflection right now." },
+      {
+        error: "Could not generate the reflection right now.",
+        detail: { status: e?.status ?? null, code: e?.code ?? null, message: e?.message ?? String(err) },
+      },
       { status: 502 },
     );
   }

@@ -3,7 +3,7 @@ import { TOTAL_QUESTIONS } from "./persona";
 import type { Exchange } from "./openai";
 
 /** Bump when the prompt changes, so we can confirm which build is live. */
-export const PROMPT_VERSION = "q-v4";
+export const PROMPT_VERSION = "v5-teaser-gate";
 
 /** System prompt for generating the next adaptive question. */
 export function questionSystemPrompt(): string {
@@ -84,8 +84,8 @@ export function questionMessages(history: Exchange[]) {
   return messages;
 }
 
-/** System prompt for the closing reflection after all questions are answered. */
-export function insightSystemPrompt(): string {
+/** Short, intriguing teaser shown BEFORE the email gate. */
+export function teaserSystemPrompt(): string {
   return `${getPersona()}
 
 ---
@@ -94,14 +94,36 @@ export function insightSystemPrompt(): string {
 
 The person has just answered ${TOTAL_QUESTIONS} questions in a self-discovery interview with you. Below is the full exchange.
 
-Write a short, sharp closing reflection back to them, in the first person. This is the payoff — it should feel like you saw straight through to the thing they've been circling.
+Write ONE short paragraph (3-4 sentences, under ~70 words) that will be shown to them BEFORE they unlock the full reflection.
+
+This is a HOOK, not the answer. Its only job is to make them ache to read the rest.
+
+GUIDELINES:
+- Speak directly to them ("you"). Make them feel genuinely seen — reference something specific from THEIR answers so it's clearly about them, not generic.
+- Hint that you noticed a real pattern or tension running underneath their answers — but DO NOT reveal what it is. Name that it's there; withhold the substance.
+- End on a line that creates a pull — a question or an unfinished thought that makes them want to know what you saw.
+- Plain, direct, warm but not flattering. No markdown, no headings, no lists.
+- Never say "sign up", "email", or mention the mechanism. Just leave them wanting more.`;
+}
+
+/** The full payoff reflection, revealed AFTER they give their email. */
+export function fullReflectionSystemPrompt(): string {
+  return `${getPersona()}
+
+---
+
+# YOUR TASK
+
+The person has just answered ${TOTAL_QUESTIONS} questions in a self-discovery interview with you. Below is the full exchange. They have now unlocked your full reflection.
+
+Write the full closing reflection back to them, in the first person. This is the payoff — it should feel like you saw straight through to the thing they've been circling.
 
 GUIDELINES:
 - Speak directly to them ("you"). Warm but blunt. No flattery.
 - Build to naming the ONE true thing standing between them and what they want — the fear, the avoidance, or the permission they haven't given themselves. Be specific to THEIR words. Like: "The only thing standing in your way isn't the work, or them — it's the permission you haven't given yourself yet."
-- Plain language. You may use a touch of your warmth here, but stay clear, not poetic.
+- Plain language. A touch of your warmth is welcome, but stay clear, not over-poetic.
 - End with one honest, open invitation to take it further with you — not a hard sell.
-- 120-180 words. Short paragraphs, some single lines for impact. No headings, no bullet points, no markdown.`;
+- 150-220 words. Short paragraphs, some single lines for impact. No headings, no bullet points, no markdown.`;
 }
 
 export function insightMessages(history: Exchange[]) {
