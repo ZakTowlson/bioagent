@@ -33,12 +33,26 @@ export async function POST(req: Request) {
   // Stubbed for now: logged server-side so nothing is lost. Wire up a real
   // destination by setting the RESEND_* env vars below, or swap in Sheets /
   // Mailchimp / Airtable here.
-  console.log("[lead] captured:", {
-    email,
-    name,
-    answers: history.length,
-    at: new Date().toISOString(),
-  });
+  const at = new Date().toISOString();
+  const transcript = history
+    .map((ex, i) => `Q${i + 1}: ${ex.question}\nThem: ${ex.answer}`)
+    .join("\n\n");
+
+  console.log("[lead] captured:", { email, name, answers: history.length, at });
+
+  // --- Save to Google Sheet (via an Apps Script web app webhook) ---
+  if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
+    try {
+      await fetch(process.env.GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ at, name, email, answers: transcript }),
+      });
+    } catch (err) {
+      console.error("[lead] google sheet save failed:", err);
+      // Don't fail the signup if the sheet is unreachable.
+    }
+  }
 
   // --- Generate the full reflection (the reward for signing up) ---
   // Only generated here, after capture, so it's never sent to the browser

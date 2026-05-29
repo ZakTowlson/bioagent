@@ -6,6 +6,8 @@ type Exchange = { question: string; answer: string };
 type Stage = "intro" | "interview" | "reflecting" | "result";
 
 const TOTAL = 10;
+// Set NEXT_PUBLIC_CALENDLY_URL in Vercel to Zak's booking link.
+const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("intro");
@@ -261,20 +263,43 @@ function Result({
       {error ? (
         <p className="mb-8 text-foreground/70">{error}</p>
       ) : sent ? (
-        // After signup: show the full reflection (or a graceful fallback).
-        <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
-          {reflection ? (
-            reflection
-              .split("\n")
-              .filter(Boolean)
-              .map((p, i) => <p key={i}>{p}</p>)
-          ) : (
-            <p>
-              Thank you — your reflection is on its way to your inbox. Read it
-              slowly when you have a quiet moment.
-            </p>
+        // After signup: show the full reflection (or a graceful fallback),
+        // then the Calendly call-to-action.
+        <>
+          <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
+            {reflection ? (
+              reflection
+                .split("\n")
+                .filter(Boolean)
+                .map((p, i) => <p key={i}>{p}</p>)
+            ) : (
+              <p>
+                Thank you — your reflection is on its way to your inbox. Read it
+                slowly when you have a quiet moment.
+              </p>
+            )}
+          </div>
+
+          {CALENDLY_URL && (
+            <div className="mt-10 rounded-2xl border border-accent/40 bg-accent/5 p-6 text-center">
+              <h3 className="mb-2 font-serif text-xl">
+                Want to take this further, together?
+              </h3>
+              <p className="mb-5 font-sans text-sm text-foreground/60">
+                If something here struck a nerve, let&apos;s talk. Book a free
+                conversation with me and we&apos;ll go deeper.
+              </p>
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+              >
+                Book a call with Zak
+              </a>
+            </div>
           )}
-        </div>
+        </>
       ) : (
         // Before signup: show only the intriguing teaser, then the gate.
         <>
