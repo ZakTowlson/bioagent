@@ -4,6 +4,7 @@ import { TOTAL_QUESTIONS } from "@/lib/persona";
 import { insightMessages, insightSystemPrompt } from "@/lib/prompts";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) {

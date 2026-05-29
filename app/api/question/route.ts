@@ -4,6 +4,7 @@ import { TOTAL_QUESTIONS } from "@/lib/persona";
 import { questionMessages, questionSystemPrompt } from "@/lib/prompts";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) {
@@ -33,15 +34,25 @@ export async function POST(req: Request) {
       questionSystemPrompt(),
       questionMessages(history),
     );
+    if (!question) {
+      return NextResponse.json(
+        { error: "The model returned an empty question.", detail: "empty_content" },
+        { status: 502 },
+      );
+    }
     return NextResponse.json({
       question,
       index: history.length + 1,
       total: TOTAL_QUESTIONS,
     });
   } catch (err) {
-    console.error("question route error:", err);
+    const e = err as { status?: number; code?: string; message?: string };
+    console.error("question route error:", e?.status, e?.code, e?.message);
     return NextResponse.json(
-      { error: "Could not generate a question right now." },
+      {
+        error: "Could not generate a question right now.",
+        detail: { status: e?.status ?? null, code: e?.code ?? null, message: e?.message ?? String(err) },
+      },
       { status: 502 },
     );
   }
