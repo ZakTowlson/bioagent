@@ -71,7 +71,7 @@ export async function POST(req: Request) {
   }
 
   // --- Save to Google Sheet (via an Apps Script web app webhook) ---
-  // Columns: Timestamp | Name | Email | Summary | Theme | Readiness | Angle.
+  // Columns: Timestamp | Name | Email | Summary | Theme | Readiness.
   // Summary falls back to the raw answers if the reflection couldn't be made.
   if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
     try {
@@ -85,7 +85,6 @@ export async function POST(req: Request) {
           summary: reflection || transcript,
           theme: tags?.theme ?? "",
           readiness: tags?.readiness ?? "",
-          angle: tags?.angle ?? "",
         }),
       });
     } catch (err) {

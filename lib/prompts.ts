@@ -152,17 +152,15 @@ export const LEAD_THEMES = [
 export type LeadTags = {
   theme: string;
   readiness: "High" | "Medium" | "Low";
-  angle: string;
 };
 
 /** Classifies a completed interview to help Zak prioritise and prepare. */
 export function classifySystemPrompt(): string {
-  return `You analyse a completed ${TOTAL_QUESTIONS}-question self-discovery interview to help a life coach prepare for a potential client.
+  return `You analyse a completed ${TOTAL_QUESTIONS}-question self-discovery interview to help a life coach prioritise potential clients.
 
-Respond with ONLY a JSON object with exactly these three fields:
+Respond with ONLY a JSON object with exactly these two fields:
 - "theme": the single dominant theme of this person, chosen from EXACTLY one of: ${LEAD_THEMES.map((t) => `"${t}"`).join(", ")}.
 - "readiness": one of "High", "Medium", "Low" — how ready this person seems to actually do the work and engage a coach, judged by their self-awareness, honesty, and urgency.
-- "angle": ONE short sentence (max 20 words) telling the coach how to best open with or help this person.
 
 Output only the JSON. No prose, no markdown.`;
 }
