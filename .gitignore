@@ -29,3 +29,7 @@ next-env.d.ts
 
 # vercel
 .vercel
+
+# source material (Zak's ebook etc.) — keep private, never publish
+*.pdf
+/source/
