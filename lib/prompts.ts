@@ -137,3 +137,44 @@ export function insightMessages(history: Exchange[]) {
     },
   ];
 }
+
+/** The themes a lead can be tagged with (aligned to Zak's coaching). */
+export const LEAD_THEMES = [
+  "Fear & avoidance",
+  "Purpose & calling",
+  "Relationships & love",
+  "Faith & meaning",
+  "Ambition & work",
+  "Identity & self-worth",
+  "Healing & the past",
+] as const;
+
+export type LeadTags = {
+  theme: string;
+  readiness: "High" | "Medium" | "Low";
+  angle: string;
+};
+
+/** Classifies a completed interview to help Zak prioritise and prepare. */
+export function classifySystemPrompt(): string {
+  return `You analyse a completed ${TOTAL_QUESTIONS}-question self-discovery interview to help a life coach prepare for a potential client.
+
+Respond with ONLY a JSON object with exactly these three fields:
+- "theme": the single dominant theme of this person, chosen from EXACTLY one of: ${LEAD_THEMES.map((t) => `"${t}"`).join(", ")}.
+- "readiness": one of "High", "Medium", "Low" — how ready this person seems to actually do the work and engage a coach, judged by their self-awareness, honesty, and urgency.
+- "angle": ONE short sentence (max 20 words) telling the coach how to best open with or help this person.
+
+Output only the JSON. No prose, no markdown.`;
+}
+
+export function classifyMessages(history: Exchange[]) {
+  const transcript = history
+    .map((ex, i) => `Q${i + 1}: ${ex.question}\nThem: ${ex.answer}`)
+    .join("\n\n");
+  return [
+    {
+      role: "user" as const,
+      content: `Here is the interview:\n\n${transcript}\n\nClassify this person now as JSON.`,
+    },
+  ];
+}

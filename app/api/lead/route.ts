@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
-import { complete, type Exchange } from "@/lib/openai";
+import { complete, completeJSON, type Exchange } from "@/lib/openai";
 import { TOTAL_QUESTIONS } from "@/lib/persona";
-import { fullReflectionSystemPrompt, insightMessages } from "@/lib/prompts";
+import {
+  classifyMessages,
+  classifySystemPrompt,
+  fullReflectionSystemPrompt,
+  insightMessages,
+  type LeadTags,
+} from "@/lib/prompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -40,25 +46,33 @@ export async function POST(req: Request) {
 
   console.log("[lead] captured:", { email, name, answers: history.length, at });
 
-  // --- Generate the full reflection (the reward for signing up) ---
-  // Generated here, after capture, so it's never sent to the browser before
-  // the email is given — and so it can also be saved to the sheet as SUMMARY.
+  // --- Generate the reflection + the lead classification, in parallel ---
+  // The reflection is the user's reward; the tags help Zak prioritise. Both
+  // run after capture so the reflection is never sent to the browser early.
   let reflection = "";
+  let tags: LeadTags | null = null;
   if (process.env.OPENAI_API_KEY && history.length >= TOTAL_QUESTIONS) {
-    try {
-      reflection = await complete(
-        fullReflectionSystemPrompt(),
-        insightMessages(history),
-      );
-    } catch (err) {
-      console.error("[lead] reflection generation failed:", err);
-      // Don't fail the signup — fall back to emailing it.
-    }
+    const [r, t] = await Promise.all([
+      complete(fullReflectionSystemPrompt(), insightMessages(history)).catch(
+        (err) => {
+          console.error("[lead] reflection generation failed:", err);
+          return "";
+        },
+      ),
+      completeJSON<LeadTags>(classifySystemPrompt(), classifyMessages(history)).catch(
+        (err) => {
+          console.error("[lead] classification failed:", err);
+          return null;
+        },
+      ),
+    ]);
+    reflection = r;
+    tags = t;
   }
 
   // --- Save to Google Sheet (via an Apps Script web app webhook) ---
-  // Columns: Timestamp | Name | Email | Summary (the full reflection; falls
-  // back to the raw answers if the reflection couldn't be generated).
+  // Columns: Timestamp | Name | Email | Summary | Theme | Readiness | Angle.
+  // Summary falls back to the raw answers if the reflection couldn't be made.
   if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
     try {
       await fetch(process.env.GOOGLE_SHEET_WEBHOOK_URL, {
@@ -69,6 +83,9 @@ export async function POST(req: Request) {
           name,
           email,
           summary: reflection || transcript,
+          theme: tags?.theme ?? "",
+          readiness: tags?.readiness ?? "",
+          angle: tags?.angle ?? "",
         }),
       });
     } catch (err) {

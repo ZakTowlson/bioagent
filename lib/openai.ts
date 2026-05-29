@@ -25,3 +25,21 @@ export async function complete(
   });
   return res.choices[0]?.message?.content?.trim() ?? "";
 }
+
+/** A completion that returns parsed JSON (or null if it can't be parsed). */
+export async function completeJSON<T = Record<string, unknown>>(
+  system: string,
+  messages: { role: "user" | "assistant"; content: string }[],
+): Promise<T | null> {
+  const res = await getClient().chat.completions.create({
+    model: MODEL,
+    messages: [{ role: "system", content: system }, ...messages],
+    response_format: { type: "json_object" },
+  });
+  const txt = res.choices[0]?.message?.content?.trim() ?? "";
+  try {
+    return JSON.parse(txt) as T;
+  } catch {
+    return null;
+  }
+}
