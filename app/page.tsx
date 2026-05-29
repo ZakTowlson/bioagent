@@ -295,7 +295,7 @@ function Result({
                 rel="noopener noreferrer"
                 className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
               >
-                Book a call with Zak
+                Book a free call with Viking Christian
               </a>
             </div>
           )}
