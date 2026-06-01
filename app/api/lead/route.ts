@@ -18,6 +18,8 @@ type LeadBody = {
   email?: string;
   name?: string;
   history?: Exchange[];
+  archetype?: string;
+  tags?: LeadTags | null;
 };
 
 export async function POST(req: Request) {
@@ -31,6 +33,8 @@ export async function POST(req: Request) {
   const email = (body.email || "").trim();
   const name = (body.name || "").trim();
   const history = Array.isArray(body.history) ? body.history : [];
+  const archetype = typeof body.archetype === "string" ? body.archetype : "";
+  const presetTags = body.tags ?? null;
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Please enter a valid email." }, { status: 400 });
   }
@@ -46,32 +50,33 @@ export async function POST(req: Request) {
 
   console.log("[lead] captured:", { email, name, answers: history.length, at });
 
-  // --- Generate the reflection + the lead classification, in parallel ---
-  // The reflection is the user's reward; the tags help Zak prioritise. Both
-  // run after capture so the reflection is never sent to the browser early.
+  // --- Generate the reflection (the reward). Classify only if the client
+  // didn't already send tags from the /api/insight step (saves a call). ---
   let reflection = "";
-  let tags: LeadTags | null = null;
+  let tags: LeadTags | null = presetTags;
   if (process.env.OPENAI_API_KEY && history.length >= TOTAL_QUESTIONS) {
-    const [r, t] = await Promise.all([
-      complete(fullReflectionSystemPrompt(), insightMessages(history)).catch(
-        (err) => {
-          console.error("[lead] reflection generation failed:", err);
-          return "";
-        },
-      ),
-      completeJSON<LeadTags>(classifySystemPrompt(), classifyMessages(history)).catch(
-        (err) => {
-          console.error("[lead] classification failed:", err);
-          return null;
-        },
-      ),
-    ]);
+    const reflectionP = complete(
+      fullReflectionSystemPrompt(archetype),
+      insightMessages(history),
+    ).catch((err) => {
+      console.error("[lead] reflection generation failed:", err);
+      return "";
+    });
+    const tagsP: Promise<LeadTags | null> = presetTags
+      ? Promise.resolve(presetTags)
+      : completeJSON<LeadTags>(classifySystemPrompt(), classifyMessages(history)).catch(
+          (err) => {
+            console.error("[lead] classification failed:", err);
+            return null;
+          },
+        );
+    const [r, t] = await Promise.all([reflectionP, tagsP]);
     reflection = r;
     tags = t;
   }
 
   // --- Save to Google Sheet (via an Apps Script web app webhook) ---
-  // Columns: Timestamp | Name | Email | Summary | Theme | Readiness.
+  // Leads tab columns: Timestamp | Name | Email | Summary | Theme | Readiness | Archetype.
   // Summary falls back to the raw answers if the reflection couldn't be made.
   if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
     try {
@@ -79,12 +84,14 @@ export async function POST(req: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          sheet: "leads",
           at,
           name,
           email,
           summary: reflection || transcript,
           theme: tags?.theme ?? "",
           readiness: tags?.readiness ?? "",
+          archetype,
         }),
       });
     } catch (err) {

@@ -3,11 +3,22 @@
 import { useState } from "react";
 
 type Exchange = { question: string; answer: string };
-type Stage = "intro" | "interview" | "reflecting" | "result";
+type Tags = { theme?: string; readiness?: string } | null;
+type Stage = "intro" | "select" | "interview" | "reflecting" | "result";
 
 const TOTAL = 10;
 // Set NEXT_PUBLIC_CALENDLY_URL in Vercel to Zak's booking link.
 const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
+
+// Mirrors lib/prompts.ts ARCHETYPES (kept here so the client bundle doesn't
+// import the server-only persona loader). Order/ids must match.
+const ARCHETYPES = [
+  { id: "faith", label: "Faith & meaning", desc: "I see my life through faith." },
+  { id: "analytical", label: "Analytical & logical", desc: "I think in logic and evidence." },
+  { id: "seeker", label: "Seeker / self-aware", desc: "I'm on a journey of growth." },
+  { id: "driven", label: "Driven / ambitious", desc: "I'm building something." },
+  { id: "crossroads", label: "At a crossroads", desc: "I feel stuck or searching." },
+];
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("intro");
@@ -15,19 +26,21 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [teaser, setTeaser] = useState("");
+  const [tags, setTags] = useState<Tags>(null);
+  const [archetype, setArchetype] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const index = history.length + 1;
 
-  async function fetchQuestion(current: Exchange[]) {
+  async function fetchQuestion(current: Exchange[], arche: string) {
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: current }),
+        body: JSON.stringify({ history: current, archetype: arche }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -39,9 +52,10 @@ export default function Home() {
     }
   }
 
-  async function start() {
+  async function choose(id: string) {
+    setArchetype(id);
     setStage("interview");
-    await fetchQuestion([]);
+    await fetchQuestion([], id);
   }
 
   async function submitAnswer() {
@@ -53,7 +67,7 @@ export default function Home() {
     if (updated.length >= TOTAL) {
       await fetchInsight(updated);
     } else {
-      await fetchQuestion(updated);
+      await fetchQuestion(updated, archetype);
     }
   }
 
@@ -64,11 +78,12 @@ export default function Home() {
       const res = await fetch("/api/insight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: final }),
+        body: JSON.stringify({ history: final, archetype }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setTeaser(data.teaser);
+      setTags(data.tags ?? null);
       setStage("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -78,7 +93,9 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-      {stage === "intro" && <Intro onStart={start} loading={loading} />}
+      {stage === "intro" && <Intro onStart={() => setStage("select")} />}
+
+      {stage === "select" && <Select onChoose={choose} loading={loading} />}
 
       {stage === "interview" && (
         <Interview
@@ -90,39 +107,91 @@ export default function Home() {
           onSubmit={submitAnswer}
           loading={loading}
           error={error}
-          onRetry={() => fetchQuestion(history)}
+          onRetry={() => fetchQuestion(history, archetype)}
         />
       )}
 
       {stage === "reflecting" && <Reflecting />}
 
       {stage === "result" && (
-        <Result teaser={teaser} history={history} error={error} />
+        <Result
+          teaser={teaser}
+          history={history}
+          archetype={archetype}
+          tags={tags}
+          error={error}
+        />
       )}
     </main>
   );
 }
 
-function Intro({ onStart, loading }: { onStart: () => void; loading: boolean }) {
+function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="text-center">
-      <p className="mb-4 text-sm uppercase tracking-[0.3em] text-accent">
+      <p className="mb-5 text-sm uppercase tracking-[0.3em] text-accent">
         The Viking Christian
       </p>
-      <h1 className="mb-6 font-serif text-4xl leading-tight sm:text-5xl">
-        Ten questions to reveal something about yourself you don&apos;t yet know.
+      <h1 className="mb-4 font-serif text-5xl leading-none sm:text-6xl">
+        The Soul Audit
       </h1>
-      <p className="mx-auto mb-10 max-w-md text-lg text-foreground/70">
-        I&apos;ll ask you one question at a time. Don&apos;t overthink it — answer
-        honestly, and let&apos;s see what surfaces.
+      <p className="mb-6 font-serif text-xl text-foreground/90 sm:text-2xl">
+        10 questions to uncover what&apos;s really holding you back.
+      </p>
+      <p className="mx-auto mb-10 max-w-md text-base text-foreground/60">
+        I&apos;ll ask you one question at a time. Answer honestly — it only works
+        if you do.
       </p>
       <button
         onClick={onStart}
-        disabled={loading}
-        className="rounded-full bg-accent px-8 py-3 font-sans text-base font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
+        className="rounded-full bg-accent px-8 py-3 font-sans text-base font-semibold text-background transition hover:opacity-90"
       >
-        {loading ? "Beginning…" : "Begin"}
+        Take the test
       </button>
+    </div>
+  );
+}
+
+function Select({
+  onChoose,
+  loading,
+}: {
+  onChoose: (id: string) => void;
+  loading: boolean;
+}) {
+  return (
+    <div>
+      <p className="mb-3 text-center text-sm uppercase tracking-[0.3em] text-accent">
+        Before we start
+      </p>
+      <h2 className="mb-8 text-center font-serif text-2xl leading-snug sm:text-3xl">
+        Which of these feels most like you?
+      </h2>
+      <div className="flex flex-col gap-3">
+        {ARCHETYPES.map((a) => (
+          <button
+            key={a.id}
+            onClick={() => onChoose(a.id)}
+            disabled={loading}
+            className="group flex items-center justify-between rounded-xl border border-foreground/15 bg-foreground/5 px-5 py-4 text-left transition hover:border-accent disabled:opacity-50"
+          >
+            <span>
+              <span className="block font-serif text-lg">{a.label}</span>
+              <span className="block font-sans text-sm text-foreground/55">
+                {a.desc}
+              </span>
+            </span>
+            <span className="font-sans text-accent opacity-0 transition group-hover:opacity-100">
+              →
+            </span>
+          </button>
+        ))}
+      </div>
+      {loading && (
+        <p className="mt-6 animate-pulse text-center text-foreground/50">
+          Beginning…
+        </p>
+      )}
     </div>
   );
 }
@@ -220,10 +289,14 @@ function Reflecting() {
 function Result({
   teaser,
   history,
+  archetype,
+  tags,
   error,
 }: {
   teaser: string;
   history: Exchange[];
+  archetype: string;
+  tags: Tags;
   error: string;
 }) {
   const [email, setEmail] = useState("");
@@ -241,7 +314,7 @@ function Result({
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, history }),
+        body: JSON.stringify({ email, name, history, archetype, tags }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -283,11 +356,11 @@ function Result({
           {CALENDLY_URL && (
             <div className="mt-10 rounded-2xl border border-accent/40 bg-accent/5 p-6 text-center">
               <h3 className="mb-2 font-serif text-xl">
-                Want to take this further, together?
+                Know what&apos;s holding you back. Now what?
               </h3>
               <p className="mb-5 font-sans text-sm text-foreground/60">
-                If something here struck a nerve, let&apos;s talk. Book a free
-                conversation with me and we&apos;ll go deeper.
+                Seeing it is the first step — direction is the next. Let&apos;s
+                talk it through and find your way forward, together.
               </p>
               <a
                 href={CALENDLY_URL}

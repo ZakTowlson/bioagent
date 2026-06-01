@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
-import { complete, type Exchange } from "@/lib/openai";
+import { complete, completeJSON, type Exchange } from "@/lib/openai";
 import { TOTAL_QUESTIONS } from "@/lib/persona";
-import { insightMessages, teaserSystemPrompt } from "@/lib/prompts";
+import {
+  classifyMessages,
+  classifySystemPrompt,
+  insightMessages,
+  teaserSystemPrompt,
+  type LeadTags,
+} from "@/lib/prompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,9 +21,11 @@ export async function POST(req: Request) {
   }
 
   let history: Exchange[] = [];
+  let archetype: string | undefined;
   try {
     const body = await req.json();
     if (Array.isArray(body?.history)) history = body.history;
+    if (typeof body?.archetype === "string") archetype = body.archetype;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -30,14 +38,48 @@ export async function POST(req: Request) {
   }
 
   try {
-    const teaser = await complete(teaserSystemPrompt(), insightMessages(history));
+    // Teaser (shown now) + classification (for tracking + later lead), in parallel.
+    const [teaser, tags] = await Promise.all([
+      complete(teaserSystemPrompt(archetype), insightMessages(history)),
+      completeJSON<LeadTags>(classifySystemPrompt(), classifyMessages(history)).catch(
+        (err) => {
+          console.error("insight classify failed:", err);
+          return null;
+        },
+      ),
+    ]);
+
     if (!teaser) {
       return NextResponse.json(
         { error: "The model returned an empty teaser." },
         { status: 502 },
       );
     }
-    return NextResponse.json({ teaser });
+
+    // Anonymous completion row (no name/email) — captures everyone who finishes.
+    if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
+      const transcript = history
+        .map((ex, i) => `Q${i + 1}: ${ex.question}\nThem: ${ex.answer}`)
+        .join("\n\n");
+      try {
+        await fetch(process.env.GOOGLE_SHEET_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sheet: "completions",
+            at: new Date().toISOString(),
+            archetype: archetype ?? "",
+            theme: tags?.theme ?? "",
+            readiness: tags?.readiness ?? "",
+            answers: transcript,
+          }),
+        });
+      } catch (err) {
+        console.error("insight completion save failed:", err);
+      }
+    }
+
+    return NextResponse.json({ teaser, tags });
   } catch (err) {
     const e = err as { status?: number; code?: string; message?: string };
     console.error("insight route error:", e?.status, e?.code, e?.message);

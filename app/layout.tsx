@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "10 Questions — The Viking Christian",
+  title: "The Soul Audit — The Viking Christian",
   description:
-    "Ten questions to reveal something about yourself you may not even know. A reflection guided by The Viking Christian.",
+    "10 questions to uncover what's really holding you back. A free self-audit guided by The Viking Christian.",
 };
 
 export default function RootLayout({
