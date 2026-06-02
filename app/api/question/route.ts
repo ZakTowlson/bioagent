@@ -15,11 +15,9 @@ export async function POST(req: Request) {
   }
 
   let history: Exchange[] = [];
-  let archetype: string | undefined;
   try {
     const body = await req.json();
     if (Array.isArray(body?.history)) history = body.history;
-    if (typeof body?.archetype === "string") archetype = body.archetype;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -33,7 +31,7 @@ export async function POST(req: Request) {
 
   try {
     const question = await complete(
-      questionSystemPrompt(archetype),
+      questionSystemPrompt(),
       questionMessages(history),
     );
     if (!question) {

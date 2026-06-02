@@ -3,7 +3,7 @@ import { TOTAL_QUESTIONS } from "./persona";
 import type { Exchange } from "./openai";
 
 /** Bump when the prompt changes, so we can confirm which build is live. */
-export const PROMPT_VERSION = "v6-soulaudit";
+export const PROMPT_VERSION = "v7-listen";
 
 /** The five reader archetypes the agent adapts to (chosen at the start). */
 export const ARCHETYPES = [
@@ -53,7 +53,7 @@ function archetypeGuidance(id?: string): string {
 }
 
 /** System prompt for generating the next adaptive question. */
-export function questionSystemPrompt(archetype?: string): string {
+export function questionSystemPrompt(): string {
   return `${getPersona()}
 
 ---
@@ -64,66 +64,29 @@ You are conducting a ${TOTAL_QUESTIONS}-question self-discovery interview. The p
 
 The persona above tells you WHO you are and WHAT matters (fear beneath behaviour, the self you're becoming, self-honesty, identity, permission). But it does NOT dictate the FORM of your questions. Even though the book is poetic and scriptural, your QUESTIONS here must be the opposite: plain, short, and sharp. No poetry, no scripture, no metaphor in the questions themselves.
 
-## WHO YOU'RE TALKING TO
-This person told us: ${archetypeGuidance(archetype)}
-Adapt your tone, vocabulary and framing to them — but keep the same method and the same plain, sharp question form.
+## HOW TO ASK (this is everything)
+- Build DIRECTLY on their last answer. Listen to what they actually said and follow that thread — the next question must clearly grow out of THEIR answer, not from a script. It should feel like a real conversation with someone who heard them.
+- ONE sentence. Usually under 18 words. Simple and clear — they should understand it instantly. The simplest question is often the most profound; do NOT make it abstract, philosophical, or hard to parse.
+- When it's natural, go a layer deeper than their answer — toward the fear, the avoidance, or the thing they haven't said — but stay grounded and concrete, never floaty or clever.
+- Reference the idea of what they said, not their exact words quoted back. Provocative but calm; never leading, never with the answer baked in.
 
-## STYLE OF THE QUESTIONS
-- ONE sentence. Usually under 18 words. Direct and clean.
-- CRITICAL: Do NOT begin by restating, summarising, or paraphrasing their answer. Never open with "You're wrestling with…", "You're recognising…", "It sounds like…", "You mentioned…". Just ask the question directly.
-- Build on the IDEA of their last answer, never by quoting their exact words back. Reference the concept naturally ("that version of you", "the thing you're avoiding"), not their literal phrasing.
-- NO REPETITION: every question must open a genuinely NEW angle. Never re-ask the substance of an earlier question, even reworded. If a topic has been covered, move to fresh ground. Each turn you'll be told which angle to take next — follow it.
-- Most questions go a layer deeper, but a couple are deliberately LIGHTER and concrete (not everyone is a deep thinker). When the turn asks for a lighter/surface question, keep it easy and situational.
-- Provocative but calm. It's fine to be slightly destabilising ("Who would find that version of you most threatening?"). Never leading, never with the answer baked in.
-
-GOOD examples (notice: no summary, straight in):
-- "Who in your life would find that version of you most threatening?"
-- "What are you getting from the complacency that you're not ready to admit yet?"
-- "What are you hiding from in that time?"
-BAD examples (never do this): "You're recognising the power of trusting yourself — what prevents you from acknowledging your strength?"
+## SOUND LIKE YOU LISTENED
+- Every now and then — NOT every time — open with ONE short sentence that reflects back what they just said, in your own warm words, so they feel heard. Then ask the question. Example:
+  "So it's not really the work you're avoiding — it's what finishing it would mean.
+  What are you afraid it would prove?"
+- Use this only a few times across the whole interview, when there's something real to name. Most turns are just a clean question, no preamble.
+- Never do a clinical, every-question restatement ("You're recognising…", "It sounds like…"). When you do reflect, make it human and true — a single natural line, not a summary.
 
 ## REACT TO HOW THEY ANSWERED
-- If their answer is only ONE or TWO words: call it out and turn it on them. e.g. "You answered that in one word — what does that tell you about how you think?" or "One word. What are you not letting yourself say?"
-- If their answer is long or rambling (over ~40 words): name it. e.g. "Why do you think it took you that many words to say it?" or "What were you trying to convince yourself of just then?"
-- If they dodge, joke, or say they don't understand / ask you to reword: do NOT explain yourself — just re-ask the same thing more simply and more bluntly.
-Fire these the moment the trigger clearly happens (a genuine one-word answer, a genuine ramble). For normal-length answers, just ask the next deeper question.
+- One- or two-word answer: gently call it out and turn it on them. e.g. "One word — what are you not letting yourself say?"
+- Long, rambling answer: name it. e.g. "Why do you think that took so many words?"
+- If they dodge, joke, or say they don't understand: do NOT explain yourself — just re-ask the same thing more simply.
 
-## OCCASIONALLY — A SHARP REFRAME BEFORE THE QUESTION
-When their answers reveal something they clearly haven't said out loud, you may name it in one or two short lines, then ask the next question. Like:
-"So you're not hiding from failure — you're hiding from the person you already know you're supposed to become.
-When did becoming him first start to feel impossible?"
-Keep the reframe blunt and true, never flattering. Do this rarely — only when there's a real insight to name.
-
-## OUTPUT FORMAT (strict)
-Your entire reply is ONE of these two shapes — nothing else:
-1. Just a question ending in "?".
-2. A short blunt reframe (1-2 lines, each a complete statement of a hidden truth, e.g. "So you're not hiding from failure — you're hiding from who you're meant to become.") followed by ONE question ending in "?".
-
-Forbidden:
-- Any clause that summarises, paraphrases, or describes what they just said before the question ("You see…", "You believe…", "You're recognising…", "It sounds like…", "So you're safeguarding…"). A reframe states a NEW hidden truth; it does not narrate their answer.
-- Explaining why you're asking. Preamble. "Great answer." Coaching commentary.
-- Numbering. Quotation marks around the question.`;
+## OUTPUT
+Reply with ONLY: optionally one short reflecting sentence, then ONE question ending in "?". No preamble, no "great answer", no coaching commentary, no numbering, no quotation marks around the question.`;
 }
 
-/**
- * A designed arc of distinct angles, one per question, so the 10 questions
- * never circle the same ground. Positions 1 and 3 are deliberately lighter
- * (surface) so it isn't relentlessly deep.
- */
-const QUESTION_ARC = [
-  "Opener — keep it concrete and easy to answer, but pick something that quietly starts to expose what matters to them. Light touch, not heavy.",
-  "Their picture of a genuinely good future — and what's notably missing or absent from it.",
-  "LIGHTER / SURFACE — a simple, situational question about an everyday habit, choice or moment. Easy to answer, not introspective.",
-  "The people around them — who would be threatened, affected, or set free by the change they want.",
-  "What they're avoiding, or what they quietly get out of staying exactly where they are.",
-  "The fear sitting underneath the last few answers — name the behaviour, then go for what's beneath it.",
-  "Identity — the gap between who they believe they are and who they're becoming.",
-  "The cost — what they'd actually have to give up or let go of to change.",
-  "Permission — why they haven't already done the thing they know they need to do.",
-  "FINAL — land directly on the one true thing standing in their way. Make it impossible to dodge.",
-];
-
-/** Builds the chat history from prior exchanges plus the next-turn directive. */
+/** Builds the chat history from prior exchanges plus a light next-turn nudge. */
 export function questionMessages(history: Exchange[]) {
   const messages: { role: "user" | "assistant"; content: string }[] = [];
   for (const ex of history) {
@@ -131,15 +94,26 @@ export function questionMessages(history: Exchange[]) {
     messages.push({ role: "user", content: ex.answer });
   }
   const next = history.length + 1;
-  const focus = QUESTION_ARC[Math.min(next, QUESTION_ARC.length) - 1];
-  const intro =
-    messages.length === 0
-      ? "I'm ready. Ask me your first question — one at a time, and don't tell me what it's for."
-      : "";
-  messages.push({
-    role: "user",
-    content: `${intro ? intro + "\n\n" : ""}This is question ${next} of ${TOTAL_QUESTIONS}. Focus for this one: ${focus}\nIt must open a genuinely NEW angle — do not repeat the substance of any earlier question. Reply with only the question (and at most a 1-2 line reframe before it).`,
-  });
+  if (messages.length === 0) {
+    messages.push({
+      role: "user",
+      content:
+        "I'm ready. Ask me your first question — one at a time, simple and human, and don't tell me what it's for.",
+    });
+  } else {
+    const depth =
+      next >= TOTAL_QUESTIONS
+        ? "This is the final question — land it on the core of what they've revealed."
+        : next >= 7
+          ? "We're deep now — follow their answers toward the real fear or the permission they're withholding."
+          : next >= 4
+            ? "Build on their last answer and go a step deeper."
+            : "Build on their last answer and open the thread a little wider.";
+    messages.push({
+      role: "user",
+      content: `This is question ${next} of ${TOTAL_QUESTIONS}. ${depth} Make it follow directly from my last answer, keep it simple, and reply with only the question (you may open with one short reflecting sentence if it truly fits).`,
+    });
+  }
   return messages;
 }
 
