@@ -117,6 +117,8 @@ export default function Home() {
 function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/soul-ark-logo.png" alt="Soul Ark" className="mx-auto mb-3 h-14 w-14 object-contain" />
       <p className="mb-1 text-sm uppercase tracking-[0.3em] text-accent">
         The Viking Christian
       </p>
