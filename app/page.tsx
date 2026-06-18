@@ -246,6 +246,7 @@ function Result({
 }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [insta, setInsta] = useState("");
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -253,13 +254,14 @@ function Result({
 
   async function submitLead() {
     if (submitting) return;
+    if (!name.trim()) { setFormError("Please enter your name."); return; }
     setSubmitting(true);
     setFormError("");
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, history, archetype, tags }),
+        body: JSON.stringify({ email, name, insta, history, archetype, tags }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -340,7 +342,7 @@ function Result({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name (optional)"
+                placeholder="Your name"
                 className="w-full rounded-lg border border-foreground/15 bg-background/40 px-4 py-3 font-sans text-sm outline-none focus:border-accent"
               />
               <input
@@ -348,6 +350,13 @@ function Result({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@email.com"
+                className="w-full rounded-lg border border-foreground/15 bg-background/40 px-4 py-3 font-sans text-sm outline-none focus:border-accent"
+              />
+              <input
+                type="text"
+                value={insta}
+                onChange={(e) => setInsta(e.target.value)}
+                placeholder="Instagram @ (optional)"
                 className="w-full rounded-lg border border-foreground/15 bg-background/40 px-4 py-3 font-sans text-sm outline-none focus:border-accent"
               />
               {formError && (
