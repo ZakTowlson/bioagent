@@ -119,11 +119,8 @@ function Intro({ onStart }: { onStart: () => void }) {
     <div className="text-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/soul-ark-logo.png" alt="Soul Ark" className="mx-auto mb-3 h-14 w-14 object-contain" />
-      <p className="mb-1 text-sm uppercase tracking-[0.3em] text-accent">
-        The Viking Christian
-      </p>
-      <p className="mb-6 font-sans text-xs text-foreground/40 uppercase tracking-widest">
-        By The Soul Ark Community
+      <p className="mb-6 text-sm uppercase tracking-[0.3em] text-accent">
+        By The Viking Christian
       </p>
       <h1 className="mb-4 font-serif text-5xl leading-none sm:text-6xl">
         The Soul Audit
