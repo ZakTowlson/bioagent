@@ -117,8 +117,11 @@ export default function Home() {
 function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="text-center">
-      <p className="mb-5 text-sm uppercase tracking-[0.3em] text-accent">
+      <p className="mb-1 text-sm uppercase tracking-[0.3em] text-accent">
         The Viking Christian
+      </p>
+      <p className="mb-6 font-sans text-xs text-foreground/40 uppercase tracking-widest">
+        By The Soul Ark Community
       </p>
       <h1 className="mb-4 font-serif text-5xl leading-none sm:text-6xl">
         The Soul Audit
@@ -127,8 +130,7 @@ function Intro({ onStart }: { onStart: () => void }) {
         10 questions to uncover what&apos;s really holding you back.
       </p>
       <p className="mx-auto mb-10 max-w-md text-base text-foreground/60">
-        I&apos;ll ask you one question at a time. Answer honestly — it only works
-        if you do.
+        Answer honestly — it only works if you do.
       </p>
       <button
         onClick={onStart}
