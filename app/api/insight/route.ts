@@ -6,6 +6,8 @@ import {
   classifySystemPrompt,
   insightMessages,
   teaserSystemPrompt,
+  trollCheckMessages,
+  trollCheckSystemPrompt,
   type LeadTags,
 } from "@/lib/prompts";
 
@@ -38,6 +40,21 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Check if the person was trolling before doing anything else.
+    const trollCheck = await completeJSON<{ trolling: boolean }>(
+      trollCheckSystemPrompt(),
+      trollCheckMessages(history),
+    ).catch(() => null);
+
+    if (trollCheck?.trolling) {
+      return NextResponse.json({
+        teaser:
+          "Looks like you weren't really here for this one — and that's fine. If you ever want to come back and actually give it a go, it'll be here.",
+        tags: null,
+        trolled: true,
+      });
+    }
+
     // Teaser (shown now) + classification (for tracking + later lead), in parallel.
     const [teaser, tags] = await Promise.all([
       complete(teaserSystemPrompt(archetype), insightMessages(history)),

@@ -4,21 +4,12 @@ import { useState } from "react";
 
 type Exchange = { question: string; answer: string };
 type Tags = { theme?: string; readiness?: string } | null;
-type Stage = "intro" | "select" | "interview" | "reflecting" | "result";
+type Stage = "intro" | "interview" | "reflecting" | "result";
 
 const TOTAL = 10;
 // Set NEXT_PUBLIC_CALENDLY_URL in Vercel to Zak's booking link.
 const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
 
-// Mirrors lib/prompts.ts ARCHETYPES (kept here so the client bundle doesn't
-// import the server-only persona loader). Order/ids must match.
-const ARCHETYPES = [
-  { id: "faith", label: "Faith & meaning", desc: "I see my life through faith." },
-  { id: "analytical", label: "Analytical & logical", desc: "I think in logic and evidence." },
-  { id: "seeker", label: "Seeker / self-aware", desc: "I'm on a journey of growth." },
-  { id: "driven", label: "Driven / ambitious", desc: "I'm building something." },
-  { id: "crossroads", label: "At a crossroads", desc: "I feel stuck or searching." },
-];
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("intro");
@@ -27,7 +18,7 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [teaser, setTeaser] = useState("");
   const [tags, setTags] = useState<Tags>(null);
-  const [archetype, setArchetype] = useState("");
+  const [archetype] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,10 +43,9 @@ export default function Home() {
     }
   }
 
-  async function choose(id: string) {
-    setArchetype(id);
+  async function startInterview() {
     setStage("interview");
-    await fetchQuestion([], id);
+    await fetchQuestion([], "");
   }
 
   async function submitAnswer() {
@@ -93,9 +83,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-      {stage === "intro" && <Intro onStart={() => setStage("select")} />}
-
-      {stage === "select" && <Select onChoose={choose} loading={loading} />}
+      {stage === "intro" && <Intro onStart={startInterview} />}
 
       {stage === "interview" && (
         <Interview
@@ -146,55 +134,12 @@ function Intro({ onStart }: { onStart: () => void }) {
         onClick={onStart}
         className="rounded-full bg-accent px-8 py-3 font-sans text-base font-semibold text-background transition hover:opacity-90"
       >
-        Take the test
+        Begin
       </button>
     </div>
   );
 }
 
-function Select({
-  onChoose,
-  loading,
-}: {
-  onChoose: (id: string) => void;
-  loading: boolean;
-}) {
-  return (
-    <div>
-      <p className="mb-3 text-center text-sm uppercase tracking-[0.3em] text-accent">
-        Before we start
-      </p>
-      <h2 className="mb-8 text-center font-serif text-2xl leading-snug sm:text-3xl">
-        Which of these feels most like you?
-      </h2>
-      <div className="flex flex-col gap-3">
-        {ARCHETYPES.map((a) => (
-          <button
-            key={a.id}
-            onClick={() => onChoose(a.id)}
-            disabled={loading}
-            className="group flex items-center justify-between rounded-xl border border-foreground/15 bg-foreground/5 px-5 py-4 text-left transition hover:border-accent disabled:opacity-50"
-          >
-            <span>
-              <span className="block font-serif text-lg">{a.label}</span>
-              <span className="block font-sans text-sm text-foreground/55">
-                {a.desc}
-              </span>
-            </span>
-            <span className="font-sans text-accent opacity-0 transition group-hover:opacity-100">
-              →
-            </span>
-          </button>
-        ))}
-      </div>
-      {loading && (
-        <p className="mt-6 animate-pulse text-center text-foreground/50">
-          Beginning…
-        </p>
-      )}
-    </div>
-  );
-}
 
 function Interview({
   index,
