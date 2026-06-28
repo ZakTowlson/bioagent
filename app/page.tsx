@@ -10,7 +10,7 @@ const TOTAL = 10;
 const INSTAGRAM_URL = "https://www.instagram.com/thevikingchristian/";
 
 export default function Home() {
-  const [stage, setStage] = useState<Stage>("intro");
+  const [stage, setStage] = useState<Stage>("capture");
   const [history, setHistory] = useState<Exchange[]>([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -177,17 +177,22 @@ function Capture({
   }
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <p className="mb-3 text-center text-sm uppercase tracking-[0.3em] text-accent">
-        Before we start
+    <div className="mx-auto w-full max-w-md text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/soul-ark-logo.png" alt="Soul Ark" className="mx-auto mb-4 h-12 w-12 object-contain" />
+      <p className="mb-3 text-sm uppercase tracking-[0.3em] text-accent">
+        The Soul Audit
       </p>
-      <h2 className="mb-2 text-center font-serif text-2xl leading-snug sm:text-3xl">
-        Where should I send your results?
-      </h2>
-      <p className="mb-8 text-center font-sans text-sm text-foreground/50">
-        I&apos;ll email you a copy of your personal reflection when we&apos;re done.
+      <h1 className="mb-4 font-serif text-4xl leading-tight sm:text-5xl">
+        What&apos;s actually holding you back?
+      </h1>
+      <p className="mb-2 font-sans text-base text-foreground/70">
+        Most people treat the symptoms. This finds the root.
       </p>
-      <div className="flex flex-col gap-3">
+      <p className="mb-8 font-sans text-sm text-foreground/40">
+        10 questions. Personal reflection. Free.
+      </p>
+      <div className="flex flex-col gap-3 text-left">
         <input
           type="text"
           value={name}
@@ -209,10 +214,10 @@ function Capture({
           onClick={handleSubmit}
           className="rounded-full bg-accent px-7 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
         >
-          Start the audit →
+          Get instant access →
         </button>
       </div>
-      <p className="mt-4 text-center font-sans text-xs text-foreground/30">
+      <p className="mt-4 font-sans text-xs text-foreground/30">
         No spam. Unsubscribe any time.
       </p>
     </div>
