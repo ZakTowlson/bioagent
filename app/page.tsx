@@ -4,34 +4,34 @@ import { useState } from "react";
 
 type Exchange = { question: string; answer: string };
 type Tags = { theme?: string; readiness?: string } | null;
-type Stage = "intro" | "interview" | "reflecting" | "result";
+type Stage = "intro" | "capture" | "interview" | "reflecting" | "result";
 
 const TOTAL = 10;
-// Set NEXT_PUBLIC_CALENDLY_URL in Vercel to Zak's booking link.
-const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
-
+const INSTAGRAM_URL = "https://www.instagram.com/thevikingchristian/";
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("intro");
   const [history, setHistory] = useState<Exchange[]>([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [teaser, setTeaser] = useState("");
+  const [reflection, setReflection] = useState("");
   const [tags, setTags] = useState<Tags>(null);
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
   const [archetype] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const index = history.length + 1;
 
-  async function fetchQuestion(current: Exchange[], arche: string) {
+  async function fetchQuestion(current: Exchange[]) {
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: current, archetype: arche }),
+        body: JSON.stringify({ history: current, archetype }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -45,7 +45,7 @@ export default function Home() {
 
   async function startInterview() {
     setStage("interview");
-    await fetchQuestion([], "");
+    await fetchQuestion([]);
   }
 
   async function submitAnswer() {
@@ -53,27 +53,37 @@ export default function Home() {
     const updated = [...history, { question, answer: answer.trim() }];
     setHistory(updated);
     setAnswer("");
-
     if (updated.length >= TOTAL) {
-      await fetchInsight(updated);
+      await fetchResult(updated);
     } else {
-      await fetchQuestion(updated, archetype);
+      await fetchQuestion(updated);
     }
   }
 
-  async function fetchInsight(final: Exchange[]) {
+  async function fetchResult(final: Exchange[]) {
     setStage("reflecting");
     setError("");
     try {
-      const res = await fetch("/api/insight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: final, archetype }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setTeaser(data.teaser);
-      setTags(data.tags ?? null);
+      const [insightRes, leadRes] = await Promise.all([
+        fetch("/api/insight", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ history: final, archetype }),
+        }),
+        fetch("/api/lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: leadName, email: leadEmail, history: final, archetype, tags }),
+        }),
+      ]);
+      const insightData = await insightRes.json();
+      const leadData = await leadRes.json();
+      if (insightData.trolled) {
+        setReflection(insightData.teaser);
+      } else {
+        setReflection(leadData.reflection || insightData.teaser || "");
+      }
+      setTags(insightData.tags ?? null);
       setStage("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -83,7 +93,17 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-      {stage === "intro" && <Intro onStart={startInterview} />}
+      {stage === "intro" && <Intro onStart={() => setStage("capture")} />}
+
+      {stage === "capture" && (
+        <Capture
+          name={leadName}
+          email={leadEmail}
+          setName={setLeadName}
+          setEmail={setLeadEmail}
+          onSubmit={startInterview}
+        />
+      )}
 
       {stage === "interview" && (
         <Interview
@@ -95,20 +115,14 @@ export default function Home() {
           onSubmit={submitAnswer}
           loading={loading}
           error={error}
-          onRetry={() => fetchQuestion(history, archetype)}
+          onRetry={() => fetchQuestion(history)}
         />
       )}
 
       {stage === "reflecting" && <Reflecting />}
 
       {stage === "result" && (
-        <Result
-          teaser={teaser}
-          history={history}
-          archetype={archetype}
-          tags={tags}
-          error={error}
-        />
+        <Result reflection={reflection} error={error} name={leadName} />
       )}
     </main>
   );
@@ -141,6 +155,69 @@ function Intro({ onStart }: { onStart: () => void }) {
   );
 }
 
+function Capture({
+  name,
+  email,
+  setName,
+  setEmail,
+  onSubmit,
+}: {
+  name: string;
+  email: string;
+  setName: (v: string) => void;
+  setEmail: (v: string) => void;
+  onSubmit: () => void;
+}) {
+  const [error, setError] = useState("");
+
+  function handleSubmit() {
+    if (!name.trim()) { setError("Please enter your name."); return; }
+    if (!email.trim() || !email.includes("@")) { setError("Please enter a valid email."); return; }
+    onSubmit();
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-md">
+      <p className="mb-3 text-center text-sm uppercase tracking-[0.3em] text-accent">
+        Before we start
+      </p>
+      <h2 className="mb-2 text-center font-serif text-2xl leading-snug sm:text-3xl">
+        Where should I send your results?
+      </h2>
+      <p className="mb-8 text-center font-sans text-sm text-foreground/50">
+        I&apos;ll email you a copy of your personal reflection when we&apos;re done.
+      </p>
+      <div className="flex flex-col gap-3">
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+          autoFocus
+          className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent"
+        />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your email"
+          onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
+          className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent"
+        />
+        {error && <p className="font-sans text-sm text-red-400">{error}</p>}
+        <button
+          onClick={handleSubmit}
+          className="rounded-full bg-accent px-7 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+        >
+          Start the audit →
+        </button>
+      </div>
+      <p className="mt-4 text-center font-sans text-xs text-foreground/30">
+        No spam. Unsubscribe any time.
+      </p>
+    </div>
+  );
+}
 
 function Interview({
   index,
@@ -233,144 +310,64 @@ function Reflecting() {
 }
 
 function Result({
-  teaser,
-  history,
-  archetype,
-  tags,
+  reflection,
   error,
+  name,
 }: {
-  teaser: string;
-  history: Exchange[];
-  archetype: string;
-  tags: Tags;
+  reflection: string;
   error: string;
+  name: string;
 }) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [insta, setInsta] = useState("");
-  const [sent, setSent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [reflection, setReflection] = useState("");
-
-  async function submitLead() {
-    if (submitting) return;
-    if (!name.trim()) { setFormError("Please enter your name."); return; }
-    setSubmitting(true);
-    setFormError("");
-    try {
-      const res = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, insta, history, archetype, tags }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setReflection(data.reflection || "");
-      setSent(true);
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
     <div>
       <p className="mb-4 text-sm uppercase tracking-[0.3em] text-accent">
-        {sent ? "Your full reflection" : "What I saw"}
+        Your reflection
       </p>
 
       {error ? (
         <p className="mb-8 text-foreground/70">{error}</p>
-      ) : sent ? (
-        // After signup: show the full reflection (or a graceful fallback),
-        // then the Calendly call-to-action.
-        <>
-          <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
-            {reflection ? (
-              reflection
-                .split("\n")
-                .filter(Boolean)
-                .map((p, i) => <p key={i}>{p}</p>)
-            ) : (
-              <p>
-                Thank you — your reflection is on its way to your inbox. Read it
-                slowly when you have a quiet moment.
-              </p>
-            )}
-          </div>
-
-          {CALENDLY_URL && (
-            <div className="mt-10 rounded-2xl border border-accent/40 bg-accent/5 p-6 text-center">
-              <h3 className="mb-2 font-serif text-xl">
-                Know what&apos;s holding you back. Now what?
-              </h3>
-              <p className="mb-5 font-sans text-sm text-foreground/60">
-                Seeing it is the first step — direction is the next. Let&apos;s
-                talk it through and find your way forward, together.
-              </p>
-              <a
-                href={CALENDLY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
-              >
-                Book a free call with Viking Christian
-              </a>
-            </div>
-          )}
-        </>
       ) : (
-        // Before signup: show only the intriguing teaser, then the gate.
         <>
-          <div className="mb-10 space-y-4 font-serif text-xl leading-relaxed text-foreground/90">
-            {teaser.split("\n").filter(Boolean).map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
+          <div className="mb-12 space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
+            {reflection
+              ? reflection.split("\n").filter(Boolean).map((p, i) => <p key={i}>{p}</p>)
+              : <p>Your reflection has been sent to your email. Read it slowly when you have a quiet moment.</p>
+            }
           </div>
 
-          <div className="rounded-2xl border border-foreground/15 bg-foreground/5 p-6">
-            <h3 className="mb-2 font-serif text-xl">
-              There&apos;s something I want to show you.
-            </h3>
-            <p className="mb-5 font-sans text-sm text-foreground/60">
-              Leave your email and I&apos;ll reveal the full reflection — what
-              your answers quietly pointed to, and where to go from here.
+          {/* Masterclass placeholder — replace YOUTUBE_URL when ready */}
+          <div className="rounded-2xl border border-accent/30 bg-accent/5 p-6 text-center">
+            <p className="mb-2 font-sans text-xs uppercase tracking-[0.25em] text-accent">
+              Want to go deeper?
             </p>
-            <div className="flex flex-col gap-3">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                className="w-full rounded-lg border border-foreground/15 bg-background/40 px-4 py-3 font-sans text-sm outline-none focus:border-accent"
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                className="w-full rounded-lg border border-foreground/15 bg-background/40 px-4 py-3 font-sans text-sm outline-none focus:border-accent"
-              />
-              <input
-                type="text"
-                value={insta}
-                onChange={(e) => setInsta(e.target.value)}
-                placeholder="Instagram @ (optional)"
-                className="w-full rounded-lg border border-foreground/15 bg-background/40 px-4 py-3 font-sans text-sm outline-none focus:border-accent"
-              />
-              {formError && (
-                <p className="font-sans text-sm text-red-400">{formError}</p>
-              )}
-              <button
-                onClick={submitLead}
-                disabled={submitting}
-                className="rounded-full bg-accent px-7 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
-              >
-                {submitting ? "Revealing…" : "Reveal my reflection"}
-              </button>
-            </div>
+            <h3 className="mb-3 font-serif text-2xl">
+              Your Free Masterclass
+            </h3>
+            <p className="mb-6 font-sans text-sm text-foreground/60">
+              Everything you need to understand your mindset, take control of your emotions, and start becoming who you were built to be — completely free.
+            </p>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+            >
+              Coming soon — follow for the release
+            </a>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="mb-3 font-sans text-sm text-foreground/50">
+              Ready to go further? DM <span className="text-accent font-semibold">REBUILD</span> on Instagram.
+            </p>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-full border border-accent/40 px-6 py-2 font-sans text-sm text-accent transition hover:border-accent"
+            >
+              @thevikingchristian →
+            </a>
           </div>
         </>
       )}
