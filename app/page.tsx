@@ -340,7 +340,23 @@ function Result({
             }
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-8 rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center">
+            <p className="mb-1 font-sans text-xs uppercase tracking-[0.25em] text-accent">Free — Daily</p>
+            <h3 className="mb-2 font-serif text-xl">Join the free Telegram</h3>
+            <p className="mb-5 font-sans text-sm text-foreground/60">
+              I post daily on mindset and what it actually takes. No fluff, no sales. Just the real stuff.
+            </p>
+            <a
+              href="https://t.me/thevikingfiles"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+            >
+              Join here →
+            </a>
+          </div>
+
+          <div className="mt-6 text-center">
             <p className="mb-3 font-sans text-sm text-foreground/50">
               DM <span className="text-accent font-semibold">REBUILD</span> on Instagram for 1:1 coaching and mentoring.
             </p>
