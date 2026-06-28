@@ -340,30 +340,9 @@ function Result({
             }
           </div>
 
-          {/* Masterclass placeholder — replace YOUTUBE_URL when ready */}
-          <div className="rounded-2xl border border-accent/30 bg-accent/5 p-6 text-center">
-            <p className="mb-2 font-sans text-xs uppercase tracking-[0.25em] text-accent">
-              Want to go deeper?
-            </p>
-            <h3 className="mb-3 font-serif text-2xl">
-              Your Free Masterclass
-            </h3>
-            <p className="mb-6 font-sans text-sm text-foreground/60">
-              Everything you need to understand your mindset, take control of your emotions, and start becoming who you were built to be — completely free.
-            </p>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
-            >
-              Coming soon — follow for the release
-            </a>
-          </div>
-
           <div className="mt-8 text-center">
             <p className="mb-3 font-sans text-sm text-foreground/50">
-              Ready to go further? DM <span className="text-accent font-semibold">REBUILD</span> on Instagram.
+              DM <span className="text-accent font-semibold">REBUILD</span> on Instagram for 1:1 coaching and mentoring.
             </p>
             <a
               href={INSTAGRAM_URL}
