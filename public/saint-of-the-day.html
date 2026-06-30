@@ -12,9 +12,12 @@
 
   .card { max-width: 560px; width: 100%; position: relative; border-radius: 16px; overflow: hidden; border: 1px solid #2a2a30; box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
 
-  .card-img { width: 100%; height: 320px; object-fit: cover; display: block; filter: brightness(0.45) sepia(0.3); }
+  .card-img { display: none; }
 
-  .card-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 40%, rgba(10,10,12,0.97) 100%); }
+  .card-bg { width: 100%; height: 220px; background: radial-gradient(ellipse at 50% 30%, #1e1a0e 0%, #0a0a0c 70%); display: flex; align-items: center; justify-content: center; }
+  .card-bg svg { opacity: 0.18; }
+
+  .card-overlay { display: none; }
 
   .card-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 28px 28px 32px; }
 
@@ -39,6 +42,14 @@
 
 <div class="card">
   <img class="card-img" id="saintImg" src="" alt=""/>
+  <div class="card-bg">
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="60" y1="10" x2="60" y2="110" stroke="#b79743" stroke-width="3"/>
+      <line x1="20" y1="38" x2="100" y2="38" stroke="#b79743" stroke-width="3"/>
+      <line x1="35" y1="58" x2="85" y2="58" stroke="#b79743" stroke-width="1.5"/>
+      <circle cx="60" cy="60" r="56" stroke="#b79743" stroke-width="1" stroke-dasharray="4 6"/>
+    </svg>
+  </div>
   <div class="card-overlay"></div>
   <div class="card-content">
     <div class="saint-name" id="saintName"></div>
