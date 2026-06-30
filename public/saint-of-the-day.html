@@ -7,33 +7,19 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0a0a0c; font-family: Georgia, serif; color: #d4c9a8; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; }
-
-  .label { font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: #b79743; margin-bottom: 32px; text-align: center; }
-
-  .card { max-width: 560px; width: 100%; position: relative; border-radius: 16px; overflow: hidden; border: 1px solid #2a2a30; box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
-
-  .card-img { display: none; }
-
-  .card-bg { width: 100%; height: 220px; background: radial-gradient(ellipse at 50% 30%, #1e1a0e 0%, #0a0a0c 70%); display: flex; align-items: center; justify-content: center; }
-  .card-bg svg { opacity: 0.18; }
-
-  .card-overlay { display: none; }
-
-  .card-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 28px 28px 32px; }
-
-  .saint-name { font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: #b79743; margin-bottom: 14px; }
-
-  .quote { font-size: 18px; line-height: 1.65; color: #ffffff; font-style: italic; margin-bottom: 20px; }
-
-  .divider { width: 40px; height: 1px; background: #b79743; margin-bottom: 16px; }
-
-  .date-line { font-size: 11px; color: #555; letter-spacing: 0.2em; text-transform: uppercase; }
-
-  .nav { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
-  .nav button { background: transparent; border: 1px solid #2a2a30; color: #888; font-family: Georgia, serif; font-size: 12px; padding: 8px 20px; border-radius: 99px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.1em; }
+  .label { font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: #b79743; margin-bottom: 28px; text-align: center; }
+  .card { max-width: 520px; width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid #2a2a30; box-shadow: 0 20px 60px rgba(0,0,0,0.7); background: #0d0d10; }
+  .icon-area { width: 100%; background: radial-gradient(ellipse at 50% 60%, #1c1608 0%, #0a0a0c 75%); display: flex; align-items: center; justify-content: center; padding: 36px 0 28px; border-bottom: 1px solid #1e1e26; }
+  .icon-area svg { filter: drop-shadow(0 0 18px rgba(183,151,67,0.25)); }
+  .card-content { padding: 24px 28px 30px; }
+  .saint-name { font-size: 10px; letter-spacing: 0.38em; text-transform: uppercase; color: #b79743; margin-bottom: 14px; }
+  .quote { font-size: 17px; line-height: 1.7; color: #ffffff; font-style: italic; margin-bottom: 20px; }
+  .divider { width: 36px; height: 1px; background: #b79743; margin-bottom: 14px; }
+  .date-line { font-size: 10px; color: #444; letter-spacing: 0.2em; text-transform: uppercase; }
+  .nav { display: flex; justify-content: center; gap: 12px; margin-top: 22px; }
+  .nav button { background: transparent; border: 1px solid #2a2a30; color: #777; font-family: Georgia, serif; font-size: 12px; padding: 8px 22px; border-radius: 99px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.1em; }
   .nav button:hover { border-color: #b79743; color: #b79743; }
-
-  .footer-note { margin-top: 20px; font-size: 11px; color: #333; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; }
+  .footer-note { margin-top: 18px; font-size: 10px; color: #2a2a2a; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; }
 </style>
 </head>
 <body>
@@ -41,16 +27,9 @@
 <div class="label">Soul Ark · Daily Wisdom</div>
 
 <div class="card">
-  <img class="card-img" id="saintImg" src="" alt=""/>
-  <div class="card-bg">
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <line x1="60" y1="10" x2="60" y2="110" stroke="#b79743" stroke-width="3"/>
-      <line x1="20" y1="38" x2="100" y2="38" stroke="#b79743" stroke-width="3"/>
-      <line x1="35" y1="58" x2="85" y2="58" stroke="#b79743" stroke-width="1.5"/>
-      <circle cx="60" cy="60" r="56" stroke="#b79743" stroke-width="1" stroke-dasharray="4 6"/>
-    </svg>
+  <div class="icon-area">
+    <div id="saintIcon"></div>
   </div>
-  <div class="card-overlay"></div>
   <div class="card-content">
     <div class="saint-name" id="saintName"></div>
     <div class="quote" id="saintQuote"></div>
@@ -63,91 +42,180 @@
   <button onclick="prev()">← Previous</button>
   <button onclick="next()">Next →</button>
 </div>
-
 <div class="footer-note">A new saint every day</div>
 
 <script>
+
+// SVG icon portraits — each saint has a unique face, beard, halo, robe colour
+const ICONS = {
+  bishop: (robe, beard) => `
+    <svg width="160" height="200" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Halo -->
+      <circle cx="80" cy="72" r="52" fill="none" stroke="#b79743" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.6"/>
+      <circle cx="80" cy="72" r="46" fill="none" stroke="#b79743" stroke-width="0.5" opacity="0.4"/>
+      <!-- Cross on halo -->
+      <line x1="80" y1="26" x2="80" y2="50" stroke="#b79743" stroke-width="1.2" opacity="0.5"/>
+      <line x1="68" y1="36" x2="92" y2="36" stroke="#b79743" stroke-width="1.2" opacity="0.5"/>
+      <!-- Robe -->
+      <path d="M 30 170 Q 40 130 55 118 L 80 128 L 105 118 Q 120 130 130 170 Z" fill="${robe}" opacity="0.9"/>
+      <!-- Omophorion / vestment detail -->
+      <path d="M 55 118 Q 80 136 105 118" fill="none" stroke="#b79743" stroke-width="1" opacity="0.6"/>
+      <line x1="80" y1="128" x2="80" y2="175" stroke="#b79743" stroke-width="0.8" opacity="0.4"/>
+      <!-- Neck -->
+      <rect x="72" y="108" width="16" height="14" rx="4" fill="#c8a882"/>
+      <!-- Head -->
+      <ellipse cx="80" cy="88" rx="28" ry="32" fill="#c8a882"/>
+      <!-- Hair -->
+      <path d="M 52 80 Q 54 54 80 52 Q 106 54 108 80" fill="${beard}" opacity="0.85"/>
+      <!-- Beard -->
+      <path d="M 58 100 Q 60 120 80 124 Q 100 120 102 100 Q 90 112 80 112 Q 70 112 58 100Z" fill="${beard}" opacity="0.85"/>
+      <!-- Eyes -->
+      <ellipse cx="70" cy="86" rx="4" ry="3.5" fill="#1a1a1a"/>
+      <ellipse cx="90" cy="86" rx="4" ry="3.5" fill="#1a1a1a"/>
+      <circle cx="71" cy="85" r="1.2" fill="#fff" opacity="0.6"/>
+      <circle cx="91" cy="85" r="1.2" fill="#fff" opacity="0.6"/>
+      <!-- Nose -->
+      <path d="M 78 90 Q 80 96 82 90" fill="none" stroke="#a07850" stroke-width="1"/>
+      <!-- Mouth -->
+      <path d="M 73 103 Q 80 107 87 103" fill="none" stroke="#8a6040" stroke-width="1.2"/>
+      <!-- Eyebrows -->
+      <path d="M 64 81 Q 70 78 76 81" fill="none" stroke="${beard}" stroke-width="1.5" opacity="0.8"/>
+      <path d="M 84 81 Q 90 78 96 81" fill="none" stroke="${beard}" stroke-width="1.5" opacity="0.8"/>
+    </svg>`,
+
+  monk: (robe, beard) => `
+    <svg width="160" height="200" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Halo -->
+      <circle cx="80" cy="70" r="50" fill="none" stroke="#b79743" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.6"/>
+      <circle cx="80" cy="70" r="44" fill="none" stroke="#b79743" stroke-width="0.5" opacity="0.35"/>
+      <!-- Cross -->
+      <line x1="80" y1="22" x2="80" y2="46" stroke="#b79743" stroke-width="1.2" opacity="0.5"/>
+      <line x1="68" y1="33" x2="92" y2="33" stroke="#b79743" stroke-width="1.2" opacity="0.5"/>
+      <!-- Monastic robe / ryassa -->
+      <path d="M 28 175 Q 38 132 52 120 L 80 130 L 108 120 Q 122 132 132 175 Z" fill="${robe}" opacity="0.95"/>
+      <!-- Klobuk (monastic hat) -->
+      <ellipse cx="80" cy="56" rx="30" ry="10" fill="${robe}"/>
+      <path d="M 50 56 Q 50 34 80 32 Q 110 34 110 56" fill="${robe}"/>
+      <path d="M 50 56 L 45 90 M 110 56 L 115 90" fill="none" stroke="${robe}" stroke-width="8" stroke-linecap="round" opacity="0.7"/>
+      <!-- Neck -->
+      <rect x="73" y="108" width="14" height="14" rx="3" fill="#c8a882"/>
+      <!-- Head -->
+      <ellipse cx="80" cy="88" rx="26" ry="30" fill="#c8a882"/>
+      <!-- Beard (long monastic) -->
+      <path d="M 56 102 Q 58 130 80 136 Q 102 130 104 102 Q 92 116 80 116 Q 68 116 56 102Z" fill="${beard}" opacity="0.9"/>
+      <!-- Eyes -->
+      <ellipse cx="71" cy="87" rx="3.5" ry="3" fill="#1a1a1a"/>
+      <ellipse cx="89" cy="87" rx="3.5" ry="3" fill="#1a1a1a"/>
+      <circle cx="72" cy="86" r="1" fill="#fff" opacity="0.6"/>
+      <circle cx="90" cy="86" r="1" fill="#fff" opacity="0.6"/>
+      <!-- Nose -->
+      <path d="M 78 91 Q 80 96 82 91" fill="none" stroke="#a07850" stroke-width="1"/>
+      <!-- Mouth -->
+      <path d="M 74 102 Q 80 106 86 102" fill="none" stroke="#8a6040" stroke-width="1.2"/>
+      <!-- Eyebrows -->
+      <path d="M 65 82 Q 71 79 77 82" fill="none" stroke="${beard}" stroke-width="1.5" opacity="0.8"/>
+      <path d="M 83 82 Q 89 79 95 82" fill="none" stroke="${beard}" stroke-width="1.5" opacity="0.8"/>
+    </svg>`,
+
+  elder: (robe, beard) => `
+    <svg width="160" height="200" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Halo -->
+      <circle cx="80" cy="68" r="50" fill="none" stroke="#b79743" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.6"/>
+      <circle cx="80" cy="68" r="44" fill="none" stroke="#b79743" stroke-width="0.5" opacity="0.35"/>
+      <line x1="80" y1="20" x2="80" y2="44" stroke="#b79743" stroke-width="1.2" opacity="0.5"/>
+      <line x1="68" y1="31" x2="92" y2="31" stroke="#b79743" stroke-width="1.2" opacity="0.5"/>
+      <!-- Robe -->
+      <path d="M 25 178 Q 38 135 54 122 L 80 132 L 106 122 Q 122 135 135 178 Z" fill="${robe}" opacity="0.9"/>
+      <!-- Neck -->
+      <rect x="72" y="108" width="16" height="14" rx="4" fill="#c0987a"/>
+      <!-- Head (older, slightly larger) -->
+      <ellipse cx="80" cy="86" rx="30" ry="34" fill="#c0987a"/>
+      <!-- White long elder beard -->
+      <path d="M 52 100 Q 50 138 80 148 Q 110 138 108 100 Q 94 120 80 120 Q 66 120 52 100Z" fill="${beard}"/>
+      <!-- White hair / wreath -->
+      <path d="M 50 78 Q 52 50 80 48 Q 108 50 110 78" fill="${beard}" opacity="0.7"/>
+      <!-- Wrinkle lines -->
+      <path d="M 60 82 Q 68 80 70 82" fill="none" stroke="#a07850" stroke-width="0.7" opacity="0.5"/>
+      <path d="M 90 82 Q 92 80 100 82" fill="none" stroke="#a07850" stroke-width="0.7" opacity="0.5"/>
+      <path d="M 66 95 Q 80 98 94 95" fill="none" stroke="#a07850" stroke-width="0.6" opacity="0.4"/>
+      <!-- Eyes (gentle, slightly squinting) -->
+      <path d="M 66 86 Q 70 83 74 86 Q 70 89 66 86Z" fill="#2a1a0a"/>
+      <path d="M 86 86 Q 90 83 94 86 Q 90 89 86 86Z" fill="#2a1a0a"/>
+      <circle cx="70" cy="85" r="0.9" fill="#fff" opacity="0.5"/>
+      <circle cx="90" cy="85" r="0.9" fill="#fff" opacity="0.5"/>
+      <!-- Nose -->
+      <path d="M 77 91 Q 80 97 83 91" fill="none" stroke="#906040" stroke-width="1.1"/>
+      <!-- Peaceful smile -->
+      <path d="M 72 104 Q 80 109 88 104" fill="none" stroke="#7a5030" stroke-width="1.3"/>
+      <!-- Eyebrows (bushy) -->
+      <path d="M 62 80 Q 70 76 76 80" fill="none" stroke="${beard}" stroke-width="2" opacity="0.9"/>
+      <path d="M 84 80 Q 90 76 98 80" fill="none" stroke="${beard}" stroke-width="2" opacity="0.9"/>
+    </svg>`
+};
+
+const G = ICONS;
+
 const SAINTS = [
-  { name: "St. John Chrysostom", quote: "If you cannot find Christ in the beggar at the church door, you will not find Him in the chalice.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/John_Chrysostom_Hagia_Sophia_mosaic.jpg/800px-John_Chrysostom_Hagia_Sophia_mosaic.jpg" },
-  { name: "St. Seraphim of Sarov", quote: "Acquire a peaceful spirit, and thousands around you will be saved.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Seraphim_of_Sarov.jpg/800px-Seraphim_of_Sarov.jpg" },
-  { name: "St. Augustine of Hippo", quote: "Our heart is restless until it rests in Thee.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Saint_Augustine_by_Philippe_de_Champaigne.jpg/800px-Saint_Augustine_by_Philippe_de_Champaigne.jpg" },
-  { name: "St. Isaac the Syrian", quote: "Blessed is the man who knows his own weakness, because this knowledge becomes to him the foundation of all that is good and beautiful.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/IsaacSyrian.jpg/800px-IsaacSyrian.jpg" },
-  { name: "St. Anthony the Great", quote: "I no longer fear God, but I love Him. For love casts out fear.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Anthony_the_Great.jpg/800px-Anthony_the_Great.jpg" },
-  { name: "St. Paisios of Mount Athos", quote: "Do not seek a perfect spiritual guide. Seek God, and He will send you what you need.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Paisios_Agioreitis.jpg/800px-Paisios_Agioreitis.jpg" },
-  { name: "St. Theophan the Recluse", quote: "Stand before God with your mind in your heart, and be at peace.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Theophan_the_Recluse.jpg/800px-Theophan_the_Recluse.jpg" },
-  { name: "St. John of Kronstadt", quote: "Do not look for rest in any pleasure, because you were not created for pleasure. You were created for joy.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/John_of_Kronstadt_01.jpg/800px-John_of_Kronstadt_01.jpg" },
-  { name: "St. Nikolai Velimirovich", quote: "Faith is the beginning and love is the end, and their union is God.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Nikolaj_Velimirovic.jpg/800px-Nikolaj_Velimirovic.jpg" },
-  { name: "St. Basil the Great", quote: "A tree is known by its fruit. A man is known by his deeds. A good deed is never lost.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Basil_of_Caesarea.jpg/800px-Basil_of_Caesarea.jpg" },
-  { name: "St. Gregory the Theologian", quote: "It is better to be a poor man and to have virtue, than to be a king and to misuse power.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Gregory_of_Nazianzus.jpg/800px-Gregory_of_Nazianzus.jpg" },
-  { name: "St. Silouan the Athonite", quote: "Keep your mind in hell and despair not.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Siluan_Afonski.jpg/800px-Siluan_Afonski.jpg" },
-  { name: "St. John of the Ladder", quote: "The man who has tasted the things of heaven finds earthly things bitter.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/John_Climacus.jpg/800px-John_Climacus.jpg" },
-  { name: "St. Ambrose of Optina", quote: "We must live — not as we wish, but as God wills.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Amvrosiy_Optinsky.jpg/800px-Amvrosiy_Optinsky.jpg" },
-  { name: "St. Macarius the Great", quote: "The soul that loves God has no rest, and cannot be satisfied in this age.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Makarios_Egyptios.jpg/800px-Makarios_Egyptios.jpg" },
-  { name: "St. Ephrem the Syrian", quote: "Do not accept anything as truth if it lacks love. Do not accept anything as love which lacks truth.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Ephrem_the_Syrian.jpg/800px-Ephrem_the_Syrian.jpg" },
-  { name: "St. Ignatius Brianchaninov", quote: "Humility is the mother of salvation.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/IgnatiyBryanchaninov.jpg/800px-IgnatiyBryanchaninov.jpg" },
-  { name: "St. Porphyrios of Kavsokalyvia", quote: "Whoever wants to become a Christian must first become a poet.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Porphyrios_Bairaktaris.jpg/800px-Porphyrios_Bairaktaris.jpg" },
-  { name: "St. Maximus the Confessor", quote: "God, who is beyond all things, has revealed Himself most clearly in the poverty of the cross.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Maximus_Confessor.jpg/800px-Maximus_Confessor.jpg" },
-  { name: "St. Nectarios of Aegina", quote: "Seek the grace of the Holy Spirit and you will find peace in your soul.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Nektarios_of_Aegina.jpg/800px-Nektarios_of_Aegina.jpg" },
-  { name: "St. Herman of Alaska", quote: "From this day, from this hour, from this very minute, let us love God above all.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Saint_Herman_of_Alaska.jpg/800px-Saint_Herman_of_Alaska.jpg" },
-  { name: "St. Paisius Velichkovsky", quote: "Humility cannot be learned in solitude — it is learned by bearing the burdens of one another.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Paisiy_Velicikovsky.jpg/800px-Paisiy_Velicikovsky.jpg" },
-  { name: "St. Tikhon of Zadonsk", quote: "The Christian's life must not be aimless. It must be directed to one great aim — the glory of God.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Tikhon_of_Zadonsk.jpg/800px-Tikhon_of_Zadonsk.jpg" },
-  { name: "St. Mark of Ephesus", quote: "We are not monks of the Pope of Rome. We follow the tradition of the Fathers.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Mark_of_Ephesus.jpg/800px-Mark_of_Ephesus.jpg" },
-  { name: "St. John Chrysostom", quote: "Prayer is the place of refuge for every worry, a foundation for cheerfulness, a source of constant happiness, a protection against sadness.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/John_Chrysostom_Hagia_Sophia_mosaic.jpg/800px-John_Chrysostom_Hagia_Sophia_mosaic.jpg" },
-  { name: "St. Seraphim of Sarov", quote: "You cannot be too gentle, too kind. Shun even to appear harsh in your treatment of each other.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Seraphim_of_Sarov.jpg/800px-Seraphim_of_Sarov.jpg" },
-  { name: "St. Isaac the Syrian", quote: "The man who has learned his own weakness has reached the beginning of wisdom.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/IsaacSyrian.jpg/800px-IsaacSyrian.jpg" },
-  { name: "St. Anthony the Great", quote: "The greatest thing a man can do is to throw his sins before God and to expect temptation to his last breath.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Anthony_the_Great.jpg/800px-Anthony_the_Great.jpg" },
-  { name: "St. Silouan the Athonite", quote: "Love cannot bear to see the beloved suffer — and God is love.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Siluan_Afonski.jpg/800px-Siluan_Afonski.jpg" },
-  { name: "St. Paisios of Mount Athos", quote: "The person who has humility has everything, because God gives grace to the humble.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Paisios_Agioreitis.jpg/800px-Paisios_Agioreitis.jpg" },
-  { name: "St. Nikolai Velimirovich", quote: "The man who forgives is stronger than the man who fights. For he has conquered himself.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Nikolaj_Velimirovic.jpg/800px-Nikolaj_Velimirovic.jpg" },
-  { name: "St. Basil the Great", quote: "Many have different gifts — but the greatest of these is the capacity to love your enemy.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Basil_of_Caesarea.jpg/800px-Basil_of_Caesarea.jpg" },
-  { name: "St. Theophan the Recluse", quote: "Descend with your attention into the heart. Stand there before the Lord and admit nothing sinful.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Theophan_the_Recluse.jpg/800px-Theophan_the_Recluse.jpg" },
-  { name: "St. John of Kronstadt", quote: "Without struggle, no progress. Without sacrifice, no victory.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/John_of_Kronstadt_01.jpg/800px-John_of_Kronstadt_01.jpg" },
-  { name: "St. Ephrem the Syrian", quote: "The man of prayer is the man of power.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Ephrem_the_Syrian.jpg/800px-Ephrem_the_Syrian.jpg" },
-  { name: "St. Augustine of Hippo", quote: "Thou madest us for Thyself, and our heart is restless until it repose in Thee.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Saint_Augustine_by_Philippe_de_Champaigne.jpg/800px-Saint_Augustine_by_Philippe_de_Champaigne.jpg" },
-  { name: "St. John of the Ladder", quote: "Do not be surprised that you fall every day. Do not give up. Stand your ground bravely.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/John_Climacus.jpg/800px-John_Climacus.jpg" },
-  { name: "St. Nectarios of Aegina", quote: "Have faith in God and He will help you in every difficulty.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Nektarios_of_Aegina.jpg/800px-Nektarios_of_Aegina.jpg" },
-  { name: "St. Herman of Alaska", quote: "Be an example to others, not in words but in deeds.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Saint_Herman_of_Alaska.jpg/800px-Saint_Herman_of_Alaska.jpg" },
-  { name: "St. Ignatius Brianchaninov", quote: "Silence is the mystery of the world to come. Speech is the organ of this present world.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/IgnatiyBryanchaninov.jpg/800px-IgnatiyBryanchaninov.jpg" },
-  { name: "St. Porphyrios of Kavsokalyvia", quote: "Love Christ and don't worry about anything else. Everything else will fall into place.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Porphyrios_Bairaktaris.jpg/800px-Porphyrios_Bairaktaris.jpg" },
-  { name: "St. Maximus the Confessor", quote: "A perfect mind is one that, through true faith, in supreme ignorance supremely knows the supremely unknowable God.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Maximus_Confessor.jpg/800px-Maximus_Confessor.jpg" },
-  { name: "St. Paisios of Mount Athos", quote: "When love for God is genuine, it brings tears of joy and not sorrow.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Paisios_Agioreitis.jpg/800px-Paisios_Agioreitis.jpg" },
-  { name: "St. Seraphim of Sarov", quote: "There is nothing better than peace in Christ, for it conquers all the battles of the earth and heaven.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Seraphim_of_Sarov.jpg/800px-Seraphim_of_Sarov.jpg" },
-  { name: "St. John Chrysostom", quote: "The road to hell is paved with the bones of priests and monks — and the skulls of bishops are the lampposts that light the path.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/John_Chrysostom_Hagia_Sophia_mosaic.jpg/800px-John_Chrysostom_Hagia_Sophia_mosaic.jpg" },
-  { name: "St. Silouan the Athonite", quote: "The man who is humble is not troubled when people do not notice him or care about him.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Siluan_Afonski.jpg/800px-Siluan_Afonski.jpg" },
-  { name: "St. Isaac the Syrian", quote: "Do not hate the sinner, for we are all worthy of condemnation. Hate his sins.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/IsaacSyrian.jpg/800px-IsaacSyrian.jpg" },
-  { name: "St. Tikhon of Zadonsk", quote: "Hardship teaches us what comfort makes us forget — that we are nothing without God.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Tikhon_of_Zadonsk.jpg/800px-Tikhon_of_Zadonsk.jpg" },
-  { name: "St. Basil the Great", quote: "A word not spoken at the right time is better than a word spoken too late.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Basil_of_Caesarea.jpg/800px-Basil_of_Caesarea.jpg" },
-  { name: "St. Anthony the Great", quote: "Whoever has not experienced temptation cannot enter into the Kingdom of Heaven.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Anthony_the_Great.jpg/800px-Anthony_the_Great.jpg" },
-  { name: "St. Nikolai Velimirovich", quote: "Every good thought, every good word, every good deed — is a seed planted in eternity.", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Nikolaj_Velimirovic.jpg/800px-Nikolaj_Velimirovic.jpg" },
+  { name: "St. John Chrysostom", quote: "If you cannot find Christ in the beggar at the church door, you will not find Him in the chalice.", type: "bishop", robe: "#1a2a4a", beard: "#4a3a2a" },
+  { name: "St. Seraphim of Sarov", quote: "Acquire a peaceful spirit, and thousands around you will be saved.", type: "monk", robe: "#1a1a1a", beard: "#e8e0d0" },
+  { name: "St. Augustine of Hippo", quote: "Our heart is restless until it rests in Thee.", type: "bishop", robe: "#2a1a0a", beard: "#2a2018" },
+  { name: "St. Isaac the Syrian", quote: "Blessed is the man who knows his own weakness, because this knowledge becomes to him the foundation of all that is good.", type: "monk", robe: "#0a1a0a", beard: "#5a4a30" },
+  { name: "St. Anthony the Great", quote: "I no longer fear God, but I love Him. For love casts out fear.", type: "elder", robe: "#1a1210", beard: "#d8d0c0" },
+  { name: "St. Paisios of Mount Athos", quote: "Do not seek a perfect spiritual guide. Seek God, and He will send you what you need.", type: "monk", robe: "#0a0a0a", beard: "#c8c0a8" },
+  { name: "St. Theophan the Recluse", quote: "Stand before God with your mind in your heart, and be at peace.", type: "bishop", robe: "#1a2a1a", beard: "#3a3028" },
+  { name: "St. John of Kronstadt", quote: "Do not look for rest in any pleasure. You were created for joy, not for pleasure.", type: "bishop", robe: "#1e1a2a", beard: "#2a2018" },
+  { name: "St. Nikolai Velimirovich", quote: "Faith is the beginning and love is the end, and their union is God.", type: "bishop", robe: "#1a1a2a", beard: "#2a2820" },
+  { name: "St. Basil the Great", quote: "A tree is known by its fruit. A man is known by his deeds. A good deed is never lost.", type: "bishop", robe: "#1a0a2a", beard: "#3a2820" },
+  { name: "St. Silouan the Athonite", quote: "Blessed is the soul that loves its brother, for our brother is our life.", type: "monk", robe: "#101010", beard: "#c0b8a0" },
+  { name: "St. Ephrem the Syrian", quote: "Do not accept anything as love which lacks truth. One cannot exist without the other.", type: "elder", robe: "#1a1008", beard: "#b0a888" },
+  { name: "St. John of the Ladder", quote: "Do not be surprised that you fall every day. Do not give up. Stand your ground bravely.", type: "monk", robe: "#0a0a12", beard: "#6a5a3a" },
+  { name: "St. Ignatius Brianchaninov", quote: "Humility is the mother of salvation.", type: "bishop", robe: "#0a1a2a", beard: "#3a3020" },
+  { name: "St. Tikhon of Zadonsk", quote: "Hardship teaches us what comfort makes us forget — that we are nothing without God.", type: "bishop", robe: "#1a0a1a", beard: "#4a3820" },
+  { name: "St. Porphyrios of Kavsokalyvia", quote: "Love Christ and don't worry about anything else. Everything else will fall into place.", type: "elder", robe: "#080808", beard: "#e0d8c8" },
+  { name: "St. Maximus the Confessor", quote: "God, who is beyond all things, revealed Himself most clearly in the poverty of the cross.", type: "monk", robe: "#0a0a1a", beard: "#4a4030" },
+  { name: "St. Nectarios of Aegina", quote: "Seek the grace of the Holy Spirit and you will find peace in your soul.", type: "bishop", robe: "#1a2a1a", beard: "#2a2010" },
+  { name: "St. Herman of Alaska", quote: "From this day, from this hour, from this very minute, let us love God above all.", type: "monk", robe: "#0a1010", beard: "#e0d8c8" },
+  { name: "St. Ambrose of Optina", quote: "We must live — not as we wish, but as God wills.", type: "elder", robe: "#101008", beard: "#d0c8b0" },
+  { name: "St. Macarius the Great", quote: "The soul that loves God has no rest, and cannot be satisfied in this present age.", type: "elder", robe: "#181008", beard: "#c8c0a0" },
+  { name: "St. Gregory the Theologian", quote: "It is better to be a poor man and to have virtue, than to be a king and to misuse power.", type: "bishop", robe: "#1e1228", beard: "#3a2818" },
+  { name: "St. John Chrysostom", quote: "Prayer is the place of refuge for every worry, a foundation for cheerfulness, a source of constant happiness.", type: "bishop", robe: "#1a2a4a", beard: "#4a3a2a" },
+  { name: "St. Seraphim of Sarov", quote: "You cannot be too gentle, too kind. Shun even to appear harsh in your treatment of each other.", type: "monk", robe: "#1a1a1a", beard: "#e8e0d0" },
+  { name: "St. Isaac the Syrian", quote: "The man who has learned his own weakness has reached the beginning of wisdom.", type: "monk", robe: "#0a1a0a", beard: "#5a4a30" },
+  { name: "St. Anthony the Great", quote: "The greatest thing a man can do is to throw his sins before God and to expect temptation to his last breath.", type: "elder", robe: "#1a1210", beard: "#d8d0c0" },
+  { name: "St. Silouan the Athonite", quote: "Keep your mind in hell and despair not.", type: "monk", robe: "#101010", beard: "#c0b8a0" },
+  { name: "St. Paisios of Mount Athos", quote: "The person who has humility has everything, because God gives grace to the humble.", type: "monk", robe: "#0a0a0a", beard: "#c8c0a8" },
+  { name: "St. Nikolai Velimirovich", quote: "The man who forgives is stronger than the man who fights. For he has conquered himself.", type: "bishop", robe: "#1a1a2a", beard: "#2a2820" },
+  { name: "St. Basil the Great", quote: "Many have different gifts — but the greatest is the capacity to love your enemy.", type: "bishop", robe: "#1a0a2a", beard: "#3a2820" },
+  { name: "St. Theophan the Recluse", quote: "Descend with your attention into the heart. Stand there before the Lord and admit nothing sinful.", type: "bishop", robe: "#1a2a1a", beard: "#3a3028" },
+  { name: "St. John of Kronstadt", quote: "Without struggle, no progress. Without sacrifice, no victory.", type: "bishop", robe: "#1e1a2a", beard: "#2a2018" },
+  { name: "St. Ephrem the Syrian", quote: "The man of prayer is the man of power.", type: "elder", robe: "#1a1008", beard: "#b0a888" },
+  { name: "St. Augustine of Hippo", quote: "Thou madest us for Thyself, and our heart is restless until it repose in Thee.", type: "bishop", robe: "#2a1a0a", beard: "#2a2018" },
+  { name: "St. John of the Ladder", quote: "Do not be surprised that you fall every day. Do not give up. Stand your ground bravely.", type: "monk", robe: "#0a0a12", beard: "#6a5a3a" },
 ];
 
-  const today = new Date();
-  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-  let offset = 0;
+const today = new Date();
+const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+let offset = 0;
 
-  function getIndex() {
-    return ((dayOfYear + offset) % SAINTS.length + SAINTS.length) % SAINTS.length;
-  }
+function getIndex() { return ((dayOfYear + offset) % SAINTS.length + SAINTS.length) % SAINTS.length; }
 
-  function formatDate(d) {
-    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  }
+function formatDate(d) { return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
 
-  function render() {
-    const s = SAINTS[getIndex()];
-    const displayDate = new Date(today);
-    displayDate.setDate(today.getDate() + offset);
+function render() {
+  const s = SAINTS[getIndex()];
+  const displayDate = new Date(today);
+  displayDate.setDate(today.getDate() + offset);
+  document.getElementById('saintName').textContent = s.name;
+  document.getElementById('saintQuote').textContent = '“' + s.quote + '”';
+  document.getElementById('dateLine').textContent = formatDate(displayDate);
+  const iconFn = ICONS[s.type];
+  document.getElementById('saintIcon').innerHTML = iconFn(s.robe, s.beard);
+}
 
-    document.getElementById('saintName').textContent = s.name;
-    document.getElementById('saintQuote').textContent = '“' + s.quote + '”';
-    document.getElementById('saintImg').src = s.img;
-    document.getElementById('dateLine').textContent = formatDate(displayDate);
-  }
+function prev() { offset--; render(); }
+function next() { offset++; render(); }
 
-  function prev() { offset--; render(); }
-  function next() { offset++; render(); }
-
-  render();
+render();
 </script>
 </body>
 </html>
