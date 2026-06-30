@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soul Ark — Brotherhood Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0c;
+      font-family: Georgia, serif;
+      color: #d4c9a8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      text-align: center;
+      padding: 28px 20px 16px;
+    }
+    header p {
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #b79743;
+      margin-bottom: 8px;
+    }
+    header h1 {
+      font-size: 22px;
+      font-weight: normal;
+      color: #ffffff;
+      letter-spacing: 0.05em;
+    }
+    header span {
+      font-size: 13px;
+      color: #888;
+      display: block;
+      margin-top: 6px;
+    }
+    #map {
+      flex: 1;
+      min-height: 420px;
+      border-top: 1px solid #2a2a30;
+      border-bottom: 1px solid #2a2a30;
+    }
+    footer {
+      text-align: center;
+      padding: 14px 20px;
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* Custom marker */
+    .soul-marker {
+      width: 12px;
+      height: 12px;
+      background: #b79743;
+      border-radius: 50%;
+      border: 2px solid #0a0a0c;
+      box-shadow: 0 0 8px rgba(183,151,67,0.7);
+    }
+
+    /* Popup */
+    .leaflet-popup-content-wrapper {
+      background: #111116;
+      border: 1px solid #b79743;
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    .leaflet-popup-content {
+      color: #d4c9a8;
+      font-family: Georgia, serif;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 10px 14px;
+    }
+    .leaflet-popup-content strong {
+      color: #b79743;
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .leaflet-popup-tip {
+      background: #b79743;
+    }
+    .leaflet-popup-close-button {
+      color: #b79743 !important;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <p>Soul Ark</p>
+  <h1>Brotherhood Map</h1>
+  <span>Members from across the world</span>
+</header>
+
+<div id="map"></div>
+
+<footer>Anchored in faith &nbsp;·&nbsp; United across nations</footer>
+
+<script>
+  const map = L.map('map', {
+    center: [30, 10],
+    zoom: 2,
+    zoomControl: true,
+    attributionControl: false,
+    minZoom: 1,
+  });
+
+  // Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; CartoDB',
+    subdomains: 'abcd',
+    maxZoom: 10,
+  }).addTo(map);
+
+  // Gold dot icon
+  const goldIcon = L.divIcon({
+    className: '',
+    html: '<div class="soul-marker"></div>',
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+    popupAnchor: [0, -10],
+  });
+
+  const members = [
+    // UK / England
+    { lat: 51.5074, lng: -0.1278, country: 'England, UK', names: ['Zak', 'Brandon', 'Joe', 'Sean', 'Rev Levite', 'Sam'] },
+    // USA
+    { lat: 37.0902, lng: -95.7129, country: 'United States', names: ['Andrew', 'Lena', 'Lucy', 'Hannah', 'Laryssa'] },
+    // Serbia
+    { lat: 44.0165, lng: 21.0059, country: 'Serbia', names: ['Duncan', 'Nemanja', 'Rev Lazar'] },
+    // Japan
+    { lat: 36.2048, lng: 138.2529, country: 'Japan', names: ['Justin'] },
+    // Poland
+    { lat: 51.9194, lng: 19.1451, country: 'Poland', names: ['Krys', 'Rev Renata'] },
+    // Finland
+    { lat: 64.9631, lng: 25.7482, country: 'Finland', names: ['Miro'] },
+    // Malta
+    { lat: 35.9375, lng: 14.3754, country: 'Malta', names: ['David'] },
+    // Czech Republic
+    { lat: 49.8175, lng: 15.4730, country: 'Czech Republic', names: ['Jakub'] },
+    // Slovakia
+    { lat: 48.6690, lng: 19.6990, country: 'Slovakia', names: ['Rev Sam'] },
+    // North Macedonia
+    { lat: 41.6086, lng: 21.7453, country: 'North Macedonia', names: ['Rev Tomas'] },
+    // Canada
+    { lat: 56.1304, lng: -106.3468, country: 'Canada', names: ['Heather'] },
+  ];
+
+  members.forEach(({ lat, lng, country, names }) => {
+    const nameList = names.join(', ');
+    const plural = names.length > 1 ? 'Members' : 'Member';
+    L.marker([lat, lng], { icon: goldIcon })
+      .addTo(map)
+      .bindPopup(`<strong>${country}</strong>${nameList}<br/><span style="color:#666;font-size:11px;">${names.length} ${plural}</span>`);
+  });
+</script>
+
+</body>
+</html>
