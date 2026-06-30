@@ -1,98 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Soul Ark — Brotherhood Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0a0a0c;
-      font-family: Georgia, serif;
-      color: #d4c9a8;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    header {
-      text-align: center;
-      padding: 28px 20px 16px;
-    }
-    header p {
-      font-size: 10px;
-      letter-spacing: 0.4em;
-      text-transform: uppercase;
-      color: #b79743;
-      margin-bottom: 8px;
-    }
-    header h1 {
-      font-size: 22px;
-      font-weight: normal;
-      color: #ffffff;
-      letter-spacing: 0.05em;
-    }
-    header span {
-      font-size: 13px;
-      color: #888;
-      display: block;
-      margin-top: 6px;
-    }
-    #map {
-      flex: 1;
-      min-height: 420px;
-      border-top: 1px solid #2a2a30;
-      border-bottom: 1px solid #2a2a30;
-    }
-    footer {
-      text-align: center;
-      padding: 14px 20px;
-      font-size: 11px;
-      color: #555;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    /* Custom marker */
-    .soul-marker {
-      width: 12px;
-      height: 12px;
-      background: #b79743;
-      border-radius: 50%;
-      border: 2px solid #0a0a0c;
-      box-shadow: 0 0 8px rgba(183,151,67,0.7);
-    }
-
-    /* Popup */
-    .leaflet-popup-content-wrapper {
-      background: #111116;
-      border: 1px solid #b79743;
-      border-radius: 6px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    }
-    .leaflet-popup-content {
-      color: #d4c9a8;
-      font-family: Georgia, serif;
-      font-size: 13px;
-      line-height: 1.6;
-      margin: 10px 14px;
-    }
-    .leaflet-popup-content strong {
-      color: #b79743;
-      display: block;
-      font-size: 11px;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      margin-bottom: 3px;
-    }
-    .leaflet-popup-tip {
-      background: #b79743;
-    }
-    .leaflet-popup-close-button {
-      color: #b79743 !important;
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Soul Ark — Brotherhood Map</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0c; font-family: Georgia, serif; color: #d4c9a8; }
+  header { text-align: center; padding: 24px 20px 12px; }
+  header p { font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: #b79743; margin-bottom: 6px; }
+  header h1 { font-size: 20px; font-weight: normal; color: #fff; }
+  header span { font-size: 12px; color: #666; display: block; margin-top: 4px; }
+  .map-wrap { position: relative; width: 100%; max-width: 900px; margin: 16px auto; }
+  .map-wrap svg { width: 100%; height: auto; display: block; }
+  .tooltip {
+    position: absolute;
+    background: #111116;
+    border: 1px solid #b79743;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #d4c9a8;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  }
+  .tooltip strong { color: #b79743; display: block; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2px; }
+  .pin { cursor: pointer; }
+  .pin circle { fill: #b79743; stroke: #0a0a0c; stroke-width: 1.5; transition: r 0.15s; filter: drop-shadow(0 0 4px rgba(183,151,67,0.8)); }
+  .pin:hover circle { r: 7; }
+  footer { text-align: center; padding: 12px; font-size: 10px; color: #444; letter-spacing: 0.2em; text-transform: uppercase; }
+</style>
 </head>
 <body>
 
@@ -102,66 +42,123 @@
   <span>Members from across the world</span>
 </header>
 
-<div id="map"></div>
+<div class="map-wrap">
+  <!-- World SVG map (simplified Natural Earth projection) -->
+  <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+    <!-- Ocean background -->
+    <rect width="1000" height="500" fill="#0d1117"/>
+
+    <!-- Continents - simplified paths -->
+    <g fill="#1e2530" stroke="#2a3040" stroke-width="0.5">
+      <!-- North America -->
+      <path d="M 70 60 L 180 50 L 220 70 L 240 90 L 230 130 L 210 160 L 190 200 L 170 230 L 150 240 L 130 220 L 100 200 L 80 170 L 60 140 L 50 110 L 60 80 Z"/>
+      <!-- Central America -->
+      <path d="M 150 240 L 170 230 L 175 255 L 165 270 L 155 265 L 148 250 Z"/>
+      <!-- South America -->
+      <path d="M 155 265 L 175 255 L 200 270 L 220 300 L 230 340 L 220 390 L 200 420 L 175 430 L 155 410 L 140 370 L 135 330 L 140 290 Z"/>
+      <!-- Europe -->
+      <path d="M 440 60 L 500 55 L 520 70 L 510 90 L 490 100 L 470 110 L 450 105 L 435 90 L 438 72 Z"/>
+      <!-- Scandinavia -->
+      <path d="M 460 35 L 490 30 L 500 50 L 480 60 L 460 55 Z"/>
+      <!-- UK -->
+      <path d="M 418 68 L 428 62 L 432 75 L 422 80 L 416 74 Z"/>
+      <!-- Africa -->
+      <path d="M 450 130 L 510 120 L 545 140 L 560 180 L 555 230 L 540 280 L 510 320 L 480 340 L 455 320 L 435 280 L 425 230 L 430 180 L 440 150 Z"/>
+      <!-- Asia -->
+      <path d="M 520 55 L 650 45 L 780 60 L 830 80 L 840 120 L 820 160 L 780 180 L 720 190 L 660 180 L 600 170 L 550 150 L 520 120 L 510 90 Z"/>
+      <!-- Indian subcontinent -->
+      <path d="M 620 160 L 660 155 L 680 190 L 660 230 L 635 240 L 615 210 L 610 180 Z"/>
+      <!-- Southeast Asia -->
+      <path d="M 720 160 L 780 155 L 800 175 L 780 195 L 740 200 L 715 180 Z"/>
+      <!-- Japan -->
+      <path d="M 810 100 L 825 90 L 835 105 L 820 118 L 808 110 Z"/>
+      <!-- Australia -->
+      <path d="M 740 280 L 830 265 L 870 290 L 875 340 L 850 380 L 800 390 L 755 370 L 730 330 L 730 295 Z"/>
+      <!-- Greenland -->
+      <path d="M 220 20 L 280 10 L 300 30 L 280 50 L 240 55 L 215 40 Z"/>
+    </g>
+
+    <!-- Member pins — coordinates mapped to SVG viewBox -->
+    <!-- UK/England: ~420, 75 -->
+    <g class="pin" data-country="England, UK" data-members="Zak, Brandon, Joe, Sean, Rev Levite, Sam" data-count="6">
+      <circle cx="422" cy="75" r="5"/>
+    </g>
+    <!-- USA: ~140, 160 -->
+    <g class="pin" data-country="United States" data-members="Andrew, Lena, Lucy, Hannah, Laryssa" data-count="5">
+      <circle cx="140" cy="160" r="5"/>
+    </g>
+    <!-- Canada: ~120, 110 -->
+    <g class="pin" data-country="Canada" data-members="Heather" data-count="1">
+      <circle cx="120" cy="110" r="5"/>
+    </g>
+    <!-- Serbia: ~490, 88 -->
+    <g class="pin" data-country="Serbia" data-members="Duncan, Nemanja, Rev Lazar" data-count="3">
+      <circle cx="492" cy="88" r="5"/>
+    </g>
+    <!-- Poland: ~480, 72 -->
+    <g class="pin" data-country="Poland" data-members="Krys, Rev Renata" data-count="2">
+      <circle cx="480" cy="72" r="5"/>
+    </g>
+    <!-- Finland: ~490, 48 -->
+    <g class="pin" data-country="Finland" data-members="Miro" data-count="1">
+      <circle cx="487" cy="50" r="5"/>
+    </g>
+    <!-- Czech Republic: ~474, 80 -->
+    <g class="pin" data-country="Czech Republic" data-members="Jakub" data-count="1">
+      <circle cx="474" cy="80" r="5"/>
+    </g>
+    <!-- Slovakia: ~480, 83 -->
+    <g class="pin" data-country="Slovakia" data-members="Rev Sam" data-count="1">
+      <circle cx="483" cy="83" r="5"/>
+    </g>
+    <!-- North Macedonia: ~490, 95 -->
+    <g class="pin" data-country="North Macedonia" data-members="Rev Tomas" data-count="1">
+      <circle cx="490" cy="95" r="5"/>
+    </g>
+    <!-- Malta: ~466, 100 -->
+    <g class="pin" data-country="Malta" data-members="David" data-count="1">
+      <circle cx="466" cy="100" r="5"/>
+    </g>
+    <!-- Japan: ~815, 105 -->
+    <g class="pin" data-country="Japan" data-members="Justin" data-count="1">
+      <circle cx="815" cy="105" r="5"/>
+    </g>
+  </svg>
+
+  <div class="tooltip" id="tooltip">
+    <strong id="tt-country"></strong>
+    <span id="tt-members"></span>
+    <span id="tt-count" style="color:#555;font-size:10px;display:block;margin-top:2px;"></span>
+  </div>
+</div>
 
 <footer>Anchored in faith &nbsp;·&nbsp; United across nations</footer>
 
 <script>
-  const map = L.map('map', {
-    center: [30, 10],
-    zoom: 2,
-    zoomControl: true,
-    attributionControl: false,
-    minZoom: 1,
-  });
+  const tooltip = document.getElementById('tooltip');
+  const ttCountry = document.getElementById('tt-country');
+  const ttMembers = document.getElementById('tt-members');
+  const ttCount = document.getElementById('tt-count');
+  const wrap = document.querySelector('.map-wrap');
 
-  // Dark tile layer
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CartoDB',
-    subdomains: 'abcd',
-    maxZoom: 10,
-  }).addTo(map);
-
-  // Gold dot icon
-  const goldIcon = L.divIcon({
-    className: '',
-    html: '<div class="soul-marker"></div>',
-    iconSize: [12, 12],
-    iconAnchor: [6, 6],
-    popupAnchor: [0, -10],
-  });
-
-  const members = [
-    // UK / England
-    { lat: 51.5074, lng: -0.1278, country: 'England, UK', names: ['Zak', 'Brandon', 'Joe', 'Sean', 'Rev Levite', 'Sam'] },
-    // USA
-    { lat: 37.0902, lng: -95.7129, country: 'United States', names: ['Andrew', 'Lena', 'Lucy', 'Hannah', 'Laryssa'] },
-    // Serbia
-    { lat: 44.0165, lng: 21.0059, country: 'Serbia', names: ['Duncan', 'Nemanja', 'Rev Lazar'] },
-    // Japan
-    { lat: 36.2048, lng: 138.2529, country: 'Japan', names: ['Justin'] },
-    // Poland
-    { lat: 51.9194, lng: 19.1451, country: 'Poland', names: ['Krys', 'Rev Renata'] },
-    // Finland
-    { lat: 64.9631, lng: 25.7482, country: 'Finland', names: ['Miro'] },
-    // Malta
-    { lat: 35.9375, lng: 14.3754, country: 'Malta', names: ['David'] },
-    // Czech Republic
-    { lat: 49.8175, lng: 15.4730, country: 'Czech Republic', names: ['Jakub'] },
-    // Slovakia
-    { lat: 48.6690, lng: 19.6990, country: 'Slovakia', names: ['Rev Sam'] },
-    // North Macedonia
-    { lat: 41.6086, lng: 21.7453, country: 'North Macedonia', names: ['Rev Tomas'] },
-    // Canada
-    { lat: 56.1304, lng: -106.3468, country: 'Canada', names: ['Heather'] },
-  ];
-
-  members.forEach(({ lat, lng, country, names }) => {
-    const nameList = names.join(', ');
-    const plural = names.length > 1 ? 'Members' : 'Member';
-    L.marker([lat, lng], { icon: goldIcon })
-      .addTo(map)
-      .bindPopup(`<strong>${country}</strong>${nameList}<br/><span style="color:#666;font-size:11px;">${names.length} ${plural}</span>`);
+  document.querySelectorAll('.pin').forEach(pin => {
+    pin.addEventListener('mouseenter', e => {
+      ttCountry.textContent = pin.dataset.country;
+      ttMembers.textContent = pin.dataset.members;
+      const c = pin.dataset.count;
+      ttCount.textContent = c + (c === '1' ? ' Member' : ' Members');
+      tooltip.style.display = 'block';
+    });
+    pin.addEventListener('mousemove', e => {
+      const rect = wrap.getBoundingClientRect();
+      let x = e.clientX - rect.left + 12;
+      let y = e.clientY - rect.top - 10;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    });
+    pin.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
   });
 </script>
 
