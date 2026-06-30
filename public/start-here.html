@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Soul Ark — Start Here</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0c; font-family: Georgia, serif; color: #d4c9a8; padding: 32px 20px 60px; max-width: 700px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 40px; }
+  header p { font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: #b79743; margin-bottom: 8px; }
+  header h1 { font-size: 26px; font-weight: normal; color: #fff; margin-bottom: 8px; }
+  header span { font-size: 13px; color: #666; }
+
+  .progress-bar { background: #1a1a20; border-radius: 99px; height: 4px; margin-bottom: 40px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #b79743; border-radius: 99px; transition: width 0.5s ease; }
+
+  .lesson { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; border: 1px solid #1e1e26; border-radius: 12px; padding: 16px; transition: border-color 0.2s; position: relative; }
+  .lesson.unlocked { border-color: #2a2a35; cursor: pointer; }
+  .lesson.unlocked:hover { border-color: #b79743; }
+  .lesson.active { border-color: #b79743; background: #0f0f14; }
+  .lesson.completed { border-color: #2a3a2a; }
+  .lesson.locked { opacity: 0.4; cursor: not-allowed; }
+
+  .thumb { position: relative; width: 120px; min-width: 120px; height: 68px; border-radius: 6px; overflow: hidden; background: #111; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; }
+  .play-btn { width: 32px; height: 32px; background: #b79743; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .play-btn svg { margin-left: 2px; }
+  .lock-icon { font-size: 18px; }
+  .check-icon { width: 32px; height: 32px; background: #2a5a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+  .lesson-info { flex: 1; }
+  .lesson-num { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #b79743; margin-bottom: 4px; }
+  .lesson-title { font-size: 15px; color: #fff; margin-bottom: 4px; line-height: 1.4; }
+  .lesson-title.locked-title { color: #555; }
+  .lesson-duration { font-size: 11px; color: #555; }
+  .lesson-duration.completed-tag { color: #4a8a4a; }
+
+  /* Video player */
+  .player { display: none; margin-bottom: 32px; border-radius: 12px; overflow: hidden; border: 1px solid #b79743; background: #000; }
+  .player.visible { display: block; }
+  .player-inner { position: relative; padding-bottom: 56.25%; height: 0; }
+  .player-inner iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+  .player-caption { background: #0f0f14; padding: 14px 18px; border-top: 1px solid #1e1e26; }
+  .player-caption h3 { font-size: 15px; color: #fff; margin-bottom: 4px; }
+  .player-caption p { font-size: 12px; color: #666; }
+  .mark-done-btn { display: block; width: 100%; margin-top: 12px; padding: 10px; background: #b79743; color: #0a0a0c; border: none; border-radius: 8px; font-family: Georgia, serif; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.05em; transition: opacity 0.2s; }
+  .mark-done-btn:hover { opacity: 0.85; }
+  .mark-done-btn:disabled { background: #2a5a2a; color: #4a8a4a; cursor: default; opacity: 1; }
+
+  /* Quiz */
+  .quiz { display: none; border: 1px solid #b79743; border-radius: 12px; padding: 28px; margin-top: 8px; background: #0f0f14; }
+  .quiz.visible { display: block; }
+  .quiz h2 { font-size: 18px; color: #fff; margin-bottom: 6px; }
+  .quiz p { font-size: 13px; color: #666; margin-bottom: 24px; }
+  .q { margin-bottom: 24px; }
+  .q p { font-size: 14px; color: #d4c9a8; margin-bottom: 10px; font-weight: normal; }
+  .q label { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #888; margin-bottom: 8px; cursor: pointer; padding: 8px 12px; border-radius: 6px; border: 1px solid #1e1e26; transition: border-color 0.15s; }
+  .q label:hover { border-color: #b79743; color: #d4c9a8; }
+  .q input[type=radio] { accent-color: #b79743; }
+  .quiz-submit { padding: 12px 28px; background: #b79743; color: #0a0a0c; border: none; border-radius: 8px; font-family: Georgia, serif; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.05em; }
+  .quiz-result { display: none; text-align: center; padding: 20px 0 0; }
+  .quiz-result h3 { font-size: 20px; color: #fff; margin-bottom: 8px; }
+  .quiz-result p { font-size: 13px; color: #888; }
+
+  .complete-banner { display: none; text-align: center; padding: 40px 20px; border: 1px solid #b79743; border-radius: 12px; margin-top: 8px; background: #0f0f14; }
+  .complete-banner.visible { display: block; }
+  .complete-banner h2 { font-size: 22px; color: #fff; margin-bottom: 10px; }
+  .complete-banner p { font-size: 14px; color: #888; line-height: 1.7; }
+  .complete-banner .gold { color: #b79743; font-size: 32px; margin-bottom: 16px; display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <p>Soul Ark</p>
+  <h1>Start Here</h1>
+  <span>Watch each lesson in order to unlock the next</span>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+</div>
+
+<div class="player" id="player">
+  <div class="player-inner">
+    <iframe id="playerFrame" src="" allowfullscreen></iframe>
+  </div>
+  <div class="player-caption">
+    <h3 id="playerTitle"></h3>
+    <p id="playerDesc"></p>
+    <button class="mark-done-btn" id="markDoneBtn" onclick="markDone()">Mark as complete ✓</button>
+  </div>
+</div>
+
+<div id="lessonList"></div>
+
+<div class="quiz" id="quiz">
+  <h2>Final Check</h2>
+  <p>Answer these before you're fully in.</p>
+
+  <div class="q">
+    <p>1. What is the foundation of the Soul Ark brotherhood?</p>
+    <label><input type="radio" name="q1" value="a"> Success and achievement</label>
+    <label><input type="radio" name="q1" value="b"> Faith, identity and brotherhood</label>
+    <label><input type="radio" name="q1" value="c"> Fitness and discipline alone</label>
+  </div>
+
+  <div class="q">
+    <p>2. What does it mean to be anchored?</p>
+    <label><input type="radio" name="q2" value="a"> To stay comfortable and avoid risk</label>
+    <label><input type="radio" name="q2" value="b"> To be rooted in who you are so the world can't move you</label>
+    <label><input type="radio" name="q2" value="c"> To follow the group without question</label>
+  </div>
+
+  <div class="q">
+    <p>3. What is your first commitment as a member?</p>
+    <label><input type="radio" name="q3" value="a"> To post every day</label>
+    <label><input type="radio" name="q3" value="b"> To show up honestly and do the inner work</label>
+    <label><input type="radio" name="q3" value="c"> To recruit other members</label>
+  </div>
+
+  <button class="quiz-submit" onclick="submitQuiz()">Submit →</button>
+
+  <div class="quiz-result" id="quizResult">
+    <h3 id="quizResultTitle"></h3>
+    <p id="quizResultText"></p>
+  </div>
+</div>
+
+<div class="complete-banner" id="completeBanner">
+  <span class="gold">⚓</span>
+  <h2>You're in.</h2>
+  <p>You've completed the foundation. Now the real work begins.<br/>Head to the <strong style="color:#b79743;">Warrior Room</strong> and introduce yourself.</p>
+</div>
+
+<script>
+  const LESSONS = [
+    { id: 1, title: "Welcome to Soul Ark", duration: "3 min", desc: "Why this community exists and what it's built on.", videoId: "dQw4w9WgXcQ", thumb: "https://picsum.photos/seed/lesson1/320/180" },
+    { id: 2, title: "Who You're Becoming", duration: "5 min", desc: "Identity before action — the man you're building.", videoId: "dQw4w9WgXcQ", thumb: "https://picsum.photos/seed/lesson2/320/180" },
+    { id: 3, title: "The Inner War", duration: "4 min", desc: "The real enemy is always internal. Here's how to fight it.", videoId: "dQw4w9WgXcQ", thumb: "https://picsum.photos/seed/lesson3/320/180" },
+    { id: 4, title: "Brotherhood & Accountability", duration: "4 min", desc: "Why you need brothers, not just followers.", videoId: "dQw4w9WgXcQ", thumb: "https://picsum.photos/seed/lesson4/320/180" },
+    { id: 5, title: "Faith as a Foundation", duration: "5 min", desc: "Not religion — roots. What it means to be anchored.", videoId: "dQw4w9WgXcQ", thumb: "https://picsum.photos/seed/lesson5/320/180" },
+    { id: 6, title: "Your First Move", duration: "3 min", desc: "What to do right now. Your commitment starts here.", videoId: "dQw4w9WgXcQ", thumb: "https://picsum.photos/seed/lesson6/320/180" },
+  ];
+
+  const STORAGE_KEY = 'soulark_start_here';
+  let completed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let activeLesson = null;
+
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(completed)); }
+
+  function updateProgress() {
+    const pct = (completed.length / LESSONS.length) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function render() {
+    const list = document.getElementById('lessonList');
+    list.innerHTML = '';
+    LESSONS.forEach((lesson, i) => {
+      const isDone = completed.includes(lesson.id);
+      const isActive = activeLesson === lesson.id;
+      const isUnlocked = i === 0 || completed.includes(LESSONS[i - 1].id);
+      const isLocked = !isUnlocked;
+
+      const div = document.createElement('div');
+      div.className = 'lesson ' + (isDone ? 'completed' : isActive ? 'active' : isUnlocked ? 'unlocked' : 'locked');
+
+      let overlay = '';
+      if (isDone) overlay = '<div class="check-icon">✓</div>';
+      else if (isLocked) overlay = '<span class="lock-icon">🔒</span>';
+      else overlay = '<div class="play-btn"><svg width="10" height="12" viewBox="0 0 10 12" fill="#0a0a0c"><path d="M0 0L10 6L0 12Z"/></svg></div>';
+
+      div.innerHTML = `
+        <div class="thumb">
+          <img src="${lesson.thumb}" alt="${lesson.title}" loading="lazy"/>
+          <div class="thumb-overlay">${overlay}</div>
+        </div>
+        <div class="lesson-info">
+          <div class="lesson-num">Lesson ${lesson.id}</div>
+          <div class="lesson-title ${isLocked ? 'locked-title' : ''}">${lesson.title}</div>
+          <div class="lesson-duration ${isDone ? 'completed-tag' : ''}">${isDone ? '✓ Completed' : lesson.duration}</div>
+        </div>`;
+
+      if (!isLocked) {
+        div.onclick = () => openLesson(lesson, isDone);
+      }
+      list.appendChild(div);
+    });
+
+    // Show quiz after all lessons done
+    const allDone = LESSONS.every(l => completed.includes(l.id));
+    document.getElementById('quiz').className = 'quiz' + (allDone && !localStorage.getItem('soulark_quiz_done') ? ' visible' : '');
+    document.getElementById('completeBanner').className = 'complete-banner' + (localStorage.getItem('soulark_quiz_done') ? ' visible' : '');
+
+    updateProgress();
+  }
+
+  function openLesson(lesson, isDone) {
+    activeLesson = lesson.id;
+    const player = document.getElementById('player');
+    document.getElementById('playerFrame').src = `https://www.youtube.com/embed/${lesson.videoId}?autoplay=1`;
+    document.getElementById('playerTitle').textContent = `Lesson ${lesson.id}: ${lesson.title}`;
+    document.getElementById('playerDesc').textContent = lesson.desc;
+    const btn = document.getElementById('markDoneBtn');
+    btn.disabled = isDone;
+    btn.textContent = isDone ? '✓ Completed' : 'Mark as complete ✓';
+    player.className = 'player visible';
+    player.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    render();
+  }
+
+  function markDone() {
+    if (!activeLesson || completed.includes(activeLesson)) return;
+    completed.push(activeLesson);
+    save();
+    document.getElementById('markDoneBtn').disabled = true;
+    document.getElementById('markDoneBtn').textContent = '✓ Completed';
+    render();
+  }
+
+  function submitQuiz() {
+    const q1 = document.querySelector('input[name="q1"]:checked');
+    const q2 = document.querySelector('input[name="q2"]:checked');
+    const q3 = document.querySelector('input[name="q3"]:checked');
+    if (!q1 || !q2 || !q3) { alert('Answer all 3 questions first.'); return; }
+    const correct = q1.value === 'b' && q2.value === 'b' && q3.value === 'b';
+    const result = document.getElementById('quizResult');
+    result.style.display = 'block';
+    if (correct) {
+      document.getElementById('quizResultTitle').textContent = 'You got it.';
+      document.getElementById('quizResultText').textContent = "You understand what this is about. Welcome in.";
+      document.querySelector('.quiz-submit').style.display = 'none';
+      localStorage.setItem('soulark_quiz_done', '1');
+      setTimeout(() => { render(); result.style.display = 'none'; }, 1800);
+    } else {
+      document.getElementById('quizResultTitle').textContent = 'Not quite.';
+      document.getElementById('quizResultText').textContent = "Go back and watch the lessons again. Then come back.";
+    }
+  }
+
+  render();
+</script>
+
+</body>
+</html>
