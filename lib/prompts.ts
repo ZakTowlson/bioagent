@@ -2,57 +2,8 @@ import { getPersona } from "./persona";
 import { TOTAL_QUESTIONS } from "./persona";
 import type { Exchange } from "./openai";
 import type { ArchetypeId, SubScores } from "./scoring";
-import { ARCHETYPES } from "./scoring";
-
 /** Bump when the prompt changes, so we can confirm which build is live. */
 export const PROMPT_VERSION = "v9-diagnostic";
-
-/** The five reader archetypes the agent adapts to (chosen at the start). */
-export const ARCHETYPES = [
-  {
-    id: "faith",
-    label: "Faith & meaning",
-    desc: "I see my life through faith.",
-    guidance:
-      "They process life through Christian / Orthodox faith. You may gently use the language of soul, conscience, calling, grace and meaning. Warm, reverent, unhurried.",
-  },
-  {
-    id: "analytical",
-    label: "Analytical & logical",
-    desc: "I think in logic and evidence.",
-    guidance:
-      "They are rational and evidence-minded and may see this as 'just AI'. Frame everything as patterns, cause-and-effect, and honest logic. Avoid overt spiritual or 'woo' language — be precise and grounded, and earn their trust.",
-  },
-  {
-    id: "seeker",
-    label: "Seeker / self-aware",
-    desc: "I'm on a journey of growth.",
-    guidance:
-      "They are introspective and growth-oriented. You can go deeper sooner and use the language of self-awareness, patterns and inner work.",
-  },
-  {
-    id: "driven",
-    label: "Driven / ambitious",
-    desc: "I'm building something.",
-    guidance:
-      "Founder / leader / performance mindset. Frame around goals, identity, standards and what's blocking execution. Be direct and sharp; respect their time.",
-  },
-  {
-    id: "crossroads",
-    label: "At a crossroads",
-    desc: "I feel stuck or searching.",
-    guidance:
-      "They feel stuck or lost. Be gentle and orienting; help them find clarity. Don't be confrontational early — build a little safety first, then go deeper.",
-  },
-] as const;
-
-
-
-function archetypeGuidance(id?: string): string {
-  const a = ARCHETYPES.find((x) => x.id === id);
-  if (!a) return "No archetype was given — adapt naturally to how they answer.";
-  return `${a.label} — ${a.guidance}`;
-}
 
 /** System prompt for generating the next adaptive question. */
 export function questionSystemPrompt(questionIndex: number): string {
@@ -136,7 +87,7 @@ export function teaserSystemPrompt(archetype?: string): string {
 
 # YOUR TASK
 
-The person has just answered ${TOTAL_QUESTIONS} questions in a self-discovery interview with you. Below is the full exchange. They told us: ${archetypeGuidance(archetype)} — adapt your tone accordingly.
+The person has just answered ${TOTAL_QUESTIONS} questions in a self-discovery interview with you. Below is the full exchange.
 
 Write ONE short paragraph (3-4 sentences, under ~70 words) that will be shown to them BEFORE they unlock the full reflection.
 
@@ -179,7 +130,7 @@ export function fullReflectionSystemPrompt(archetype?: string): string {
 
 # YOUR TASK
 
-The person has just answered ${TOTAL_QUESTIONS} questions in a self-discovery interview with you. Below is the full exchange. They have now unlocked your full reflection. They told us: ${archetypeGuidance(archetype)} — adapt your tone accordingly.
+The person has just answered ${TOTAL_QUESTIONS} questions in a self-discovery interview with you. Below is the full exchange. They have now unlocked your full reflection.
 
 Write the full closing reflection back to them. This is the payoff — say the thing they haven't been able to say themselves, and leave them feeling genuinely understood.
 
