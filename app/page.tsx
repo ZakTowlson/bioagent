@@ -371,7 +371,12 @@ function Result({
         </div>
         <p className="font-sans text-sm text-foreground/40">out of 100</p>
         <p className="mt-4 font-sans text-sm text-foreground/60 max-w-sm mx-auto">
-          {firstName}, your results suggest you are currently operating significantly below your potential — held back by patterns you may not have fully named yet.
+          {firstName},{" "}
+          {insight.overallScore >= 70
+            ? "you have real foundations — but something is still quietly working against you."
+            : insight.overallScore >= 45
+            ? "there's a clear gap between where you are and what you're capable of."
+            : "something significant is holding you back — and it's been there a while."}
         </p>
       </div>
 
@@ -395,11 +400,8 @@ function Result({
         <h2 className="mb-3 font-serif text-3xl" style={{ color: primary.colour }}>
           {primary.label}
         </h2>
-        <p className="mb-2 font-sans text-sm font-medium text-foreground/80">
+        <p className="font-sans text-sm font-medium text-foreground/70 italic">
           &ldquo;{primary.tagline}&rdquo;
-        </p>
-        <p className="font-sans text-sm text-foreground/60 leading-relaxed">
-          {primary.description}
         </p>
       </div>
 
@@ -414,8 +416,8 @@ function Result({
         >
           {secondary.label}
         </h3>
-        <p className="font-sans text-sm text-foreground/55 leading-relaxed">
-          {secondary.description}
+        <p className="font-sans text-sm text-foreground/55 italic">
+          &ldquo;{secondary.tagline}&rdquo;
         </p>
       </div>
 
