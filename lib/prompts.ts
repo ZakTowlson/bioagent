@@ -46,7 +46,7 @@ export const ARCHETYPES = [
   },
 ] as const;
 
-export type ArchetypeId = (typeof ARCHETYPES)[number]["id"];
+
 
 function archetypeGuidance(id?: string): string {
   const a = ARCHETYPES.find((x) => x.id === id);
