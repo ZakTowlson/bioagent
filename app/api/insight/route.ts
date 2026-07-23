@@ -1,18 +1,28 @@
 import { NextResponse } from "next/server";
-import { complete, completeJSON, type Exchange } from "@/lib/openai";
+import { completeJSON, type Exchange } from "@/lib/openai";
 import { TOTAL_QUESTIONS } from "@/lib/persona";
 import {
   classifyMessages,
   classifySystemPrompt,
-  insightMessages,
-  teaserSystemPrompt,
   trollCheckMessages,
   trollCheckSystemPrompt,
   type LeadTags,
 } from "@/lib/prompts";
+import {
+  SCORING_RUBRIC,
+  calculateOverallScore,
+  getRankedArchetypes,
+  type ArchetypeId,
+  type SubScores,
+} from "@/lib/scoring";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+type ScoringRaw = {
+  subScores: SubScores;
+  archetypeScores: Record<ArchetypeId, number>;
+};
 
 export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) {
@@ -23,11 +33,9 @@ export async function POST(req: Request) {
   }
 
   let history: Exchange[] = [];
-  let archetype: string | undefined;
   try {
     const body = await req.json();
     if (Array.isArray(body?.history)) history = body.history;
-    if (typeof body?.archetype === "string") archetype = body.archetype;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -40,24 +48,31 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Check if the person was trolling before doing anything else.
     const trollCheck = await completeJSON<{ trolling: boolean }>(
       trollCheckSystemPrompt(),
       trollCheckMessages(history),
     ).catch(() => null);
 
     if (trollCheck?.trolling) {
-      return NextResponse.json({
-        teaser:
-          "Looks like you weren't really here for this one — and that's fine. If you ever want to come back and actually give it a go, it'll be here.",
-        tags: null,
-        trolled: true,
-      });
+      return NextResponse.json({ trolled: true });
     }
 
-    // Teaser (shown now) + classification (for tracking + later lead), in parallel.
-    const [teaser, tags] = await Promise.all([
-      complete(teaserSystemPrompt(archetype), insightMessages(history)),
+    const transcript = history
+      .map((ex, i) => `Q${i + 1}: ${ex.question}\nThem: ${ex.answer}`)
+      .join("\n\n");
+
+    const scoringMessages = [
+      {
+        role: "user" as const,
+        content: `Here is the full interview:\n\n${transcript}\n\nScore this person now. Return only JSON.`,
+      },
+    ];
+
+    const [scoring, tags] = await Promise.all([
+      completeJSON<ScoringRaw>(SCORING_RUBRIC, scoringMessages).catch((err) => {
+        console.error("insight scoring failed:", err);
+        return null;
+      }),
       completeJSON<LeadTags>(classifySystemPrompt(), classifyMessages(history)).catch(
         (err) => {
           console.error("insight classify failed:", err);
@@ -66,18 +81,19 @@ export async function POST(req: Request) {
       ),
     ]);
 
-    if (!teaser) {
+    if (!scoring) {
       return NextResponse.json(
-        { error: "The model returned an empty teaser." },
+        { error: "Could not score the interview." },
         { status: 502 },
       );
     }
 
-    // Anonymous completion row (no name/email) — captures everyone who finishes.
+    const overallScore = calculateOverallScore(scoring.subScores);
+    const [primaryArchetype, secondaryArchetype] = getRankedArchetypes(
+      scoring.archetypeScores,
+    );
+
     if (process.env.GOOGLE_SHEET_WEBHOOK_URL) {
-      const transcript = history
-        .map((ex, i) => `Q${i + 1}: ${ex.question}\nThem: ${ex.answer}`)
-        .join("\n\n");
       try {
         await fetch(process.env.GOOGLE_SHEET_WEBHOOK_URL, {
           method: "POST",
@@ -85,10 +101,12 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             sheet: "completions",
             at: new Date().toISOString(),
-            archetype: archetype ?? "",
             theme: tags?.theme ?? "",
             readiness: tags?.readiness ?? "",
             answers: transcript,
+            overallScore,
+            primaryArchetype,
+            secondaryArchetype,
           }),
         });
       } catch (err) {
@@ -96,13 +114,20 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ teaser, tags });
+    return NextResponse.json({
+      overallScore,
+      subScores: scoring.subScores,
+      archetypeScores: scoring.archetypeScores,
+      primaryArchetype,
+      secondaryArchetype,
+      tags,
+    });
   } catch (err) {
     const e = err as { status?: number; code?: string; message?: string };
     console.error("insight route error:", e?.status, e?.code, e?.message);
     return NextResponse.json(
       {
-        error: "Could not generate the reflection right now.",
+        error: "Could not generate results right now.",
         detail: { status: e?.status ?? null, code: e?.code ?? null, message: e?.message ?? String(err) },
       },
       { status: 502 },

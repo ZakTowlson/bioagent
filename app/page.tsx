@@ -1,26 +1,37 @@
 "use client";
 
 import { useState } from "react";
+import { ARCHETYPES, getScoreColour, getScoreLabel, type ArchetypeId, type SubScores } from "@/lib/scoring";
 
 type Exchange = { question: string; answer: string };
-type Tags = { theme?: string; readiness?: string } | null;
-type Stage = "intro" | "capture" | "interview" | "reflecting" | "result";
+type Stage = "capture" | "interview" | "reflecting" | "result";
 
 const TOTAL = 10;
 const INSTAGRAM_URL = "https://www.instagram.com/thevikingchristian/";
+
+type InsightResult = {
+  overallScore: number;
+  subScores: SubScores;
+  archetypeScores: Record<ArchetypeId, number>;
+  primaryArchetype: ArchetypeId;
+  secondaryArchetype: ArchetypeId;
+  tags: { theme?: string; readiness?: string } | null;
+  trolled?: boolean;
+};
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("capture");
   const [history, setHistory] = useState<Exchange[]>([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [reflection, setReflection] = useState("");
-  const [tags, setTags] = useState<Tags>(null);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
-  const [archetype] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [insight, setInsight] = useState<InsightResult | null>(null);
+  const [report, setReport] = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportUnlocked, setReportUnlocked] = useState(false);
 
   const index = history.length + 1;
 
@@ -31,7 +42,7 @@ export default function Home() {
       const res = await fetch("/api/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: current, archetype }),
+        body: JSON.stringify({ history: current }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -54,36 +65,24 @@ export default function Home() {
     setHistory(updated);
     setAnswer("");
     if (updated.length >= TOTAL) {
-      await fetchResult(updated);
+      await fetchInsight(updated);
     } else {
       await fetchQuestion(updated);
     }
   }
 
-  async function fetchResult(final: Exchange[]) {
+  async function fetchInsight(final: Exchange[]) {
     setStage("reflecting");
     setError("");
     try {
-      const [insightRes, leadRes] = await Promise.all([
-        fetch("/api/insight", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ history: final, archetype }),
-        }),
-        fetch("/api/lead", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: leadName, email: leadEmail, history: final, archetype, tags }),
-        }),
-      ]);
-      const insightData = await insightRes.json();
-      const leadData = await leadRes.json();
-      if (insightData.trolled) {
-        setReflection(insightData.teaser);
-      } else {
-        setReflection(leadData.reflection || insightData.teaser || "");
-      }
-      setTags(insightData.tags ?? null);
+      const res = await fetch("/api/insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ history: final }),
+      });
+      const data: InsightResult = await res.json();
+      if (!res.ok) throw new Error((data as unknown as { error: string }).error || "Something went wrong.");
+      setInsight(data);
       setStage("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -91,10 +90,38 @@ export default function Home() {
     }
   }
 
+  async function unlockReport() {
+    if (!insight || reportLoading || reportUnlocked) return;
+    setReportLoading(true);
+    try {
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: leadName,
+          email: leadEmail,
+          history,
+          primaryArchetype: insight.primaryArchetype,
+          secondaryArchetype: insight.secondaryArchetype,
+          subScores: insight.subScores,
+          overallScore: insight.overallScore,
+          theme: insight.tags?.theme ?? "",
+          readiness: insight.tags?.readiness ?? "",
+        }),
+      });
+      const data = await res.json();
+      if (data.report) setReport(data.report);
+      setReportUnlocked(true);
+    } catch (e) {
+      console.error("unlock failed:", e);
+      setReportUnlocked(true);
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-      {stage === "intro" && <Intro onStart={() => setStage("capture")} />}
-
       {stage === "capture" && (
         <Capture
           name={leadName}
@@ -122,36 +149,17 @@ export default function Home() {
       {stage === "reflecting" && <Reflecting />}
 
       {stage === "result" && (
-        <Result reflection={reflection} error={error} name={leadName} />
+        <Result
+          insight={insight}
+          report={report}
+          reportUnlocked={reportUnlocked}
+          reportLoading={reportLoading}
+          error={error}
+          name={leadName}
+          onUnlock={unlockReport}
+        />
       )}
     </main>
-  );
-}
-
-function Intro({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="text-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/soul-ark-logo.png" alt="Soul Ark" className="mx-auto mb-3 h-14 w-14 object-contain" />
-      <p className="mb-6 text-sm uppercase tracking-[0.3em] text-accent">
-        By The Viking Christian
-      </p>
-      <h1 className="mb-4 font-serif text-5xl leading-none sm:text-6xl">
-        The Soul Audit
-      </h1>
-      <p className="mb-6 font-serif text-xl text-foreground/90 sm:text-2xl">
-        10 questions to uncover what&apos;s really holding you back.
-      </p>
-      <p className="mx-auto mb-10 max-w-md text-base text-foreground/60">
-        Answer honestly — it only works if you do.
-      </p>
-      <button
-        onClick={onStart}
-        className="rounded-full bg-accent px-8 py-3 font-sans text-base font-semibold text-background transition hover:opacity-90"
-      >
-        Begin
-      </button>
-    </div>
   );
 }
 
@@ -184,20 +192,20 @@ function Capture({
         The Soul Audit
       </p>
       <h1 className="mb-4 font-serif text-4xl leading-tight sm:text-5xl">
-        What&apos;s actually holding you back?
+        Why are you still stuck?
       </h1>
       <p className="mb-2 font-sans text-base text-foreground/70">
-        Most people treat the symptoms. This finds the root.
+        You know you&apos;re capable of more. This finds out exactly what&apos;s in the way.
       </p>
       <p className="mb-8 font-sans text-sm text-foreground/40">
-        10 questions. Personal reflection. Free.
+        10 questions. Diagnostic score. Free.
       </p>
       <div className="flex flex-col gap-3 text-left">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Your name"
+          placeholder="Your first name"
           autoFocus
           className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent"
         />
@@ -214,11 +222,11 @@ function Capture({
           onClick={handleSubmit}
           className="rounded-full bg-accent px-7 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
         >
-          Get instant access →
+          Start the audit →
         </button>
       </div>
       <p className="mt-4 font-sans text-xs text-foreground/30">
-        No spam. Unsubscribe any time.
+        No spam. Your results are sent to your email.
       </p>
     </div>
   );
@@ -245,14 +253,23 @@ function Interview({
   error: string;
   onRetry: () => void;
 }) {
+  const progress = ((index - 1) / total) * 100;
+
   return (
     <div>
-      <div className="mb-8 flex items-center gap-3">
-        <div className="h-px flex-1 bg-foreground/15" />
-        <span className="font-sans text-xs uppercase tracking-[0.25em] text-foreground/50">
-          {index} of {total}
-        </span>
-        <div className="h-px flex-1 bg-foreground/15" />
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-sans text-xs uppercase tracking-[0.25em] text-foreground/40">
+            Question {index} of {total}
+          </span>
+          <span className="font-sans text-xs text-foreground/30">{Math.round(progress)}%</span>
+        </div>
+        <div className="h-0.5 w-full overflow-hidden rounded-full bg-foreground/10">
+          <div
+            className="h-full rounded-full bg-accent transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       {error ? (
@@ -283,16 +300,13 @@ function Interview({
             placeholder="Take your time…"
             className="w-full resize-none rounded-xl border border-foreground/15 bg-foreground/5 p-4 font-sans text-base text-foreground outline-none transition focus:border-accent"
           />
-          <div className="mt-4 flex items-center justify-between">
-            <span className="font-sans text-xs text-foreground/40">
-              ⌘ + Enter to continue
-            </span>
+          <div className="mt-4 flex items-center justify-end">
             <button
               onClick={onSubmit}
               disabled={!answer.trim() || loading}
               className="rounded-full bg-accent px-7 py-2.5 font-sans text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-40"
             >
-              {loading ? "…" : index >= total ? "Finish" : "Next"}
+              {loading ? "…" : index >= total ? "Finish" : "Next →"}
             </button>
           </div>
         </>
@@ -305,72 +319,193 @@ function Reflecting() {
   return (
     <div className="text-center">
       <p className="mb-4 animate-pulse font-serif text-2xl text-foreground/80">
-        Reflecting on your answers…
+        Analysing your answers…
       </p>
       <p className="font-sans text-sm text-foreground/50">
-        This takes a moment.
+        Building your diagnostic report.
       </p>
     </div>
   );
 }
 
+function ScoreBar({ label, score }: { label: string; score: number }) {
+  const colour = getScoreColour(score);
+  const scoreLabel = getScoreLabel(score);
+  return (
+    <div className="mb-4">
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="font-sans text-sm text-foreground/70">{label}</span>
+        <span className="font-sans text-xs font-semibold" style={{ color: colour }}>
+          {score}/100 · {scoreLabel}
+        </span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${score}%`, backgroundColor: colour }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function Result({
-  reflection,
+  insight,
+  report,
+  reportUnlocked,
+  reportLoading,
   error,
   name,
+  onUnlock,
 }: {
-  reflection: string;
+  insight: InsightResult | null;
+  report: string;
+  reportUnlocked: boolean;
+  reportLoading: boolean;
   error: string;
   name: string;
+  onUnlock: () => void;
 }) {
+  if (error && !insight) {
+    return (
+      <div className="text-center">
+        <p className="text-foreground/70">{error}</p>
+      </div>
+    );
+  }
+
+  if (insight?.trolled) {
+    return (
+      <div className="text-center">
+        <p className="font-serif text-xl text-foreground/70">
+          Looks like you weren&apos;t really here for this one — and that&apos;s fine. Come back when you&apos;re ready.
+        </p>
+      </div>
+    );
+  }
+
+  if (!insight) return null;
+
+  const primary = ARCHETYPES[insight.primaryArchetype];
+  const secondary = ARCHETYPES[insight.secondaryArchetype];
+  const scoreColour = getScoreColour(insight.overallScore);
+  const firstName = name.split(" ")[0] || "You";
+
   return (
     <div>
-      <p className="mb-4 text-sm uppercase tracking-[0.3em] text-accent">
-        Your reflection
-      </p>
+      {/* Score reveal */}
+      <div className="mb-10 text-center">
+        <p className="mb-2 font-sans text-xs uppercase tracking-[0.35em] text-foreground/40">
+          Soul Audit Score
+        </p>
+        <div
+          className="mb-1 font-serif text-8xl font-light leading-none"
+          style={{ color: scoreColour }}
+        >
+          {insight.overallScore}
+        </div>
+        <p className="font-sans text-sm text-foreground/40">out of 100</p>
+        <p className="mt-4 font-sans text-sm text-foreground/60 max-w-sm mx-auto">
+          {firstName}, your results suggest you are currently operating significantly below your potential — held back by patterns you may not have fully named yet.
+        </p>
+      </div>
 
-      {error ? (
-        <p className="mb-8 text-foreground/70">{error}</p>
+      {/* Sub-score breakdown */}
+      <div className="mb-10 rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-6">
+        <p className="mb-5 font-sans text-xs uppercase tracking-[0.3em] text-foreground/40">
+          Score Breakdown
+        </p>
+        <ScoreBar label="Identity" score={insight.subScores.identity} />
+        <ScoreBar label="Self-Trust" score={insight.subScores.selfTrust} />
+        <ScoreBar label="Emotional Control" score={insight.subScores.emotionalControl} />
+        <ScoreBar label="Consistency" score={insight.subScores.consistency} />
+        <ScoreBar label="Action Taking" score={insight.subScores.actionTaking} />
+      </div>
+
+      {/* Primary archetype */}
+      <div className="mb-6 rounded-2xl border p-6" style={{ borderColor: primary.colour + "40" }}>
+        <p className="mb-2 font-sans text-xs uppercase tracking-[0.3em]" style={{ color: primary.colour }}>
+          Dominant Pattern
+        </p>
+        <h2 className="mb-3 font-serif text-3xl" style={{ color: primary.colour }}>
+          {primary.label}
+        </h2>
+        <p className="mb-2 font-sans text-sm font-medium text-foreground/80">
+          &ldquo;{primary.tagline}&rdquo;
+        </p>
+        <p className="font-sans text-sm text-foreground/60 leading-relaxed">
+          {primary.description}
+        </p>
+      </div>
+
+      {/* Secondary archetype */}
+      <div className="mb-10 rounded-2xl border border-foreground/10 p-5">
+        <p className="mb-1.5 font-sans text-xs uppercase tracking-[0.3em] text-foreground/40">
+          Secondary Pattern
+        </p>
+        <h3
+          className="mb-2 font-serif text-xl"
+          style={{ color: secondary.colour }}
+        >
+          {secondary.label}
+        </h3>
+        <p className="font-sans text-sm text-foreground/55 leading-relaxed">
+          {secondary.description}
+        </p>
+      </div>
+
+      {/* Unlock gate */}
+      {!reportUnlocked ? (
+        <div className="mb-10 rounded-2xl border border-accent/30 bg-accent/5 p-8 text-center">
+          <p className="mb-2 font-sans text-xs uppercase tracking-[0.3em] text-accent">
+            Full Diagnostic Report
+          </p>
+          <h3 className="mb-3 font-serif text-2xl text-foreground">
+            What&apos;s really driving this pattern?
+          </h3>
+          <p className="mb-6 font-sans text-sm text-foreground/60 max-w-sm mx-auto leading-relaxed">
+            Your full report includes what your answers actually revealed, what you didn&apos;t say, the hidden pattern underneath, and your honest next step.
+          </p>
+          <button
+            onClick={onUnlock}
+            disabled={reportLoading}
+            className="rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-60"
+          >
+            {reportLoading ? "Generating your report…" : "Unlock my full report →"}
+          </button>
+        </div>
       ) : (
-        <>
-          <div className="mb-12 space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
-            {reflection
-              ? reflection.split("\n").filter(Boolean).map((p, i) => <p key={i}>{p}</p>)
-              : <p>Your reflection has been sent to your email. Read it slowly when you have a quiet moment.</p>
+        <div className="mb-10">
+          <p className="mb-5 font-sans text-xs uppercase tracking-[0.3em] text-accent">
+            Your Full Report
+          </p>
+          <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
+            {report
+              ? report.split("\n").filter(Boolean).map((p, i) => <p key={i}>{p}</p>)
+              : <p>Your report has been sent to your email. Read it slowly when you have a quiet moment.</p>
             }
           </div>
-
-          <div className="mt-8 rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center">
-            <p className="mb-1 font-sans text-xs uppercase tracking-[0.25em] text-accent">Free — Daily</p>
-            <h3 className="mb-2 font-serif text-xl">Join the free Telegram</h3>
-            <p className="mb-5 font-sans text-sm text-foreground/60">
-              I post daily on mindset and what it actually takes. No fluff, no sales. Just the real stuff.
-            </p>
-            <a
-              href="https://t.me/thevikingfiles"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
-            >
-              Join here →
-            </a>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="mb-3 font-sans text-sm text-foreground/50">
-              DM <span className="text-accent font-semibold">REBUILD</span> on Instagram for 1:1 coaching and mentoring.
-            </p>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded-full border border-accent/40 px-6 py-2 font-sans text-sm text-accent transition hover:border-accent"
-            >
-              @thevikingchristian →
-            </a>
-          </div>
-        </>
+        </div>
       )}
+
+      {/* CTA */}
+      <div className="mt-8 rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center">
+        <p className="mb-1 font-sans text-xs uppercase tracking-[0.25em] text-accent">
+          Ready to break the cycle?
+        </p>
+        <h3 className="mb-2 font-serif text-xl">Work with me directly</h3>
+        <p className="mb-5 font-sans text-sm text-foreground/60 max-w-sm mx-auto leading-relaxed">
+          DM me <span className="font-semibold text-accent">REBUILD</span> on Instagram and I&apos;ll send you a personalised voicenote based on your results.
+        </p>
+        <a
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+        >
+          DM me on Instagram →
+        </a>
+      </div>
     </div>
   );
 }

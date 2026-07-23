@@ -29,9 +29,11 @@ export async function POST(req: Request) {
     );
   }
 
+  const questionIndex = history.length + 1;
+
   try {
     const question = await complete(
-      questionSystemPrompt(),
+      questionSystemPrompt(questionIndex),
       questionMessages(history),
     );
     if (!question) {

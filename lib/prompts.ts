@@ -1,9 +1,11 @@
 import { getPersona } from "./persona";
 import { TOTAL_QUESTIONS } from "./persona";
 import type { Exchange } from "./openai";
+import type { ArchetypeId, SubScores } from "./scoring";
+import { ARCHETYPES } from "./scoring";
 
 /** Bump when the prompt changes, so we can confirm which build is live. */
-export const PROMPT_VERSION = "v8-simple";
+export const PROMPT_VERSION = "v9-diagnostic";
 
 /** The five reader archetypes the agent adapts to (chosen at the start). */
 export const ARCHETYPES = [
@@ -53,37 +55,54 @@ function archetypeGuidance(id?: string): string {
 }
 
 /** System prompt for generating the next adaptive question. */
-export function questionSystemPrompt(): string {
+export function questionSystemPrompt(questionIndex: number): string {
+  const arc = getQuestionArc(questionIndex);
   return `${getPersona()}
 
 ---
 
 # YOUR TASK
 
-You are conducting a ${TOTAL_QUESTIONS}-question self-discovery interview. The premise the person was given is: "In ${TOTAL_QUESTIONS} questions, what could you ask me about myself that even I don't know? Ask me one question at a time, without telling me the reason or the question."
+You are conducting a ${TOTAL_QUESTIONS}-question diagnostic interview. Your goal is not general self-discovery — it is to identify the specific self-sabotage patterns that are keeping this person stuck despite having real potential.
 
-The persona above tells you WHO you are and WHAT matters (fear beneath behaviour, the self you're becoming, self-honesty, identity, permission). But it does NOT dictate the FORM of your questions. Even though the book is poetic and scriptural, your QUESTIONS here must be the opposite: plain, short, and sharp. No poetry, no scripture, no metaphor in the questions themselves.
+This is question ${questionIndex} of ${TOTAL_QUESTIONS}.
 
-## HOW TO ASK (this is everything)
-- Build DIRECTLY on their last answer. The next question must clearly grow out of what THEY said — not a script. It should feel like a real conversation with someone who was actually listening.
-- ONE sentence. Usually under 18 words. Plain English — they should get it immediately. No abstract or philosophical language. No metaphors. No big words. Simple is better.
-- Go a layer deeper than their answer when you can — toward the fear, the thing they're avoiding, or what they haven't said out loud. But keep it concrete and easy to understand.
-- Never repeat their words back exactly. Be calm, direct, never pushy.
+## THIS QUESTION'S DIAGNOSTIC TARGET
+${arc.target}
+
+## HOW TO ASK
+- Build DIRECTLY on their last answer. The question must feel like it grew from what THEY said, not a script.
+- ONE sentence. Under 18 words. Plain English — no metaphors, no philosophy, no big words.
+- Go a layer deeper than their surface answer — toward the fear, the avoidance, or the thing they haven't said out loud.
+- Never repeat their words back exactly.
 
 ## SOUND LIKE YOU LISTENED
-- Every now and then — NOT every time — open with ONE short sentence that reflects back what they just said, in your own warm words, so they feel heard. Then ask the question. Example:
-  "So it's not really the work you're avoiding — it's what finishing it would mean.
-  What are you afraid it would prove?"
-- Use this only a few times across the whole interview, when there's something real to name. Most turns are just a clean question, no preamble.
-- Never do a clinical, every-question restatement ("You're recognising…", "It sounds like…"). When you do reflect, make it human and true — a single natural line, not a summary.
+- Every now and then — NOT every time — open with ONE short sentence that reflects back what they said in your own words, then ask the question. Use this only when there's something real to name.
+- Never do a clinical restatement every turn. Most turns are just a clean question.
 
 ## REACT TO HOW THEY ANSWERED
-- One- or two-word answer: gently call it out and turn it on them. e.g. "One word — what are you not letting yourself say?"
-- Long, rambling answer: name it. e.g. "Why do you think that took so many words?"
-- If they dodge, joke, or say they don't understand: do NOT explain yourself — just re-ask the same thing more simply.
+- One- or two-word answer: gently call it out. e.g. "One word — what are you not letting yourself say?"
+- Long rambling answer: name it. e.g. "Why do you think that took so many words?"
+- If they dodge or joke: re-ask the same thing more simply, don't explain yourself.
 
 ## OUTPUT
-Reply with ONLY: optionally one short reflecting sentence, then ONE question ending in "?". No preamble, no "great answer", no coaching commentary, no numbering, no quotation marks around the question.`;
+Reply with ONLY: optionally one short reflecting sentence, then ONE question ending in "?". No preamble, no "great answer", no numbering, no quotation marks.`;
+}
+
+function getQuestionArc(index: number): { target: string } {
+  const arcs: Record<number, string> = {
+    1: `SELF-TRUST. Probe whether they follow through on commitments they make to themselves. Do they trust their own word? You're looking for patterns of broken self-promises, hesitation, or consistent execution.`,
+    2: `IDENTITY. How clearly do they see themselves as the person capable of achieving what they want? Do they already feel like that person, or does it feel distant and unreal?`,
+    3: `ACTION VS OVERTHINKING. When they face an important decision or opportunity, do they act or analyse? You're looking for how much thinking happens before execution — and whether thinking becomes a substitute for doing.`,
+    4: `EMOTIONAL CONTROL. How do they respond when things don't go to plan? Do they push through discomfort or retreat? You're probing resilience and emotional regulation under pressure.`,
+    5: `AVOIDANCE PATTERNS. When a task feels uncomfortable or important, what do they actually do? You're looking for procrastination, distraction, escapism — the specific ways they avoid what matters.`,
+    6: `CONSISTENCY. Can they sustain positive habits and behaviours beyond the initial motivation? You're looking for the stop-start cycle — starting strong then falling off — and what causes it.`,
+    7: `OWNERSHIP & RESPONSIBILITY. When things aren't working, where do they place the cause? You're probing whether they take full ownership or look for external reasons. This reveals coaching readiness.`,
+    8: `EXTERNAL VALIDATION. How much does fear of judgement or need for others' approval influence their decisions? You're identifying people-pleasers and validation-seekers.`,
+    9: `VISION & DIRECTION. How clear are they on what they actually want over the next 3 years? No direction = drifting. You're separating those who are blocked from those who are simply lost.`,
+    10: `THE EXECUTION GAP — FINAL QUESTION. Land this on the core of what their answers have revealed. Ask them to imagine operating at full potential for 12 months — how different would their life look? This reveals how big they perceive the gap between where they are and what they're capable of.`,
+  };
+  return { target: arcs[index] || arcs[1] };
 }
 
 /** Builds the chat history from prior exchanges plus a light next-turn nudge. */
@@ -98,20 +117,12 @@ export function questionMessages(history: Exchange[]) {
     messages.push({
       role: "user",
       content:
-        "I'm ready. Ask me your first question — one at a time, simple and human, and don't tell me what it's for.",
+        "I'm ready. Ask me your first question — one at a time, simple and honest. Don't tell me what it's for.",
     });
   } else {
-    const depth =
-      next >= TOTAL_QUESTIONS
-        ? "This is the final question — land it on the core of what they've revealed."
-        : next >= 7
-          ? "We're deep now — follow their answers toward the real fear or the permission they're withholding."
-          : next >= 4
-            ? "Build on their last answer and go a step deeper."
-            : "Build on their last answer and open the thread a little wider.";
     messages.push({
       role: "user",
-      content: `This is question ${next} of ${TOTAL_QUESTIONS}. ${depth} Make it follow directly from my last answer, keep it simple, and reply with only the question (you may open with one short reflecting sentence if it truly fits).`,
+      content: `Ask question ${next} of ${TOTAL_QUESTIONS}. Hit the diagnostic target in the system prompt. Build directly from my last answer. Reply with only the question (optionally one short reflecting sentence first if it truly fits).`,
     });
   }
   return messages;
@@ -227,6 +238,72 @@ export function classifyMessages(history: Exchange[]) {
     {
       role: "user" as const,
       content: `Here is the interview:\n\n${transcript}\n\nClassify this person now as JSON.`,
+    },
+  ];
+}
+
+/** Full diagnostic report shown after the email unlock. */
+export function fullReportSystemPrompt(
+  primaryArchetype: ArchetypeId,
+  secondaryArchetype: ArchetypeId,
+  subScores: SubScores,
+): string {
+  const primary = ARCHETYPES[primaryArchetype];
+  const secondary = ARCHETYPES[secondaryArchetype];
+
+  return `${getPersona()}
+
+---
+
+# YOUR TASK
+
+You have just completed a diagnostic interview with someone. You know their results:
+
+Primary Pattern: ${primary.label} — ${primary.description}
+Secondary Pattern: ${secondary.label} — ${secondary.description}
+
+Sub-scores (out of 100, higher = stronger):
+- Identity: ${subScores.identity}
+- Self-Trust: ${subScores.selfTrust}
+- Emotional Control: ${subScores.emotionalControl}
+- Consistency: ${subScores.consistency}
+- Action Taking: ${subScores.actionTaking}
+
+Write their full diagnostic report. This is the payoff — say the thing they haven't been able to say to themselves. Make them feel more understood than they've felt by anyone.
+
+## STRUCTURE (follow this exactly, no headings, just flow):
+
+PARAGRAPH 1 — WHAT YOUR ANSWERS REVEALED
+What did their specific answers show? Reference their actual words and phrases. Name the pattern directly and without softening it. 3-4 sentences.
+
+PARAGRAPH 2 — WHAT YOU DIDN'T SAY (but I noticed)
+What were they circling around but not saying directly? What did the shape of their answers reveal that the words didn't? What did they avoid, minimise, or not complete? 2-3 sentences.
+
+PARAGRAPH 3 — THE HIDDEN PATTERN
+The deeper mechanics of why this pattern exists and persists. Why it made sense at some point. Why it now works against them. Be specific to their archetype combination. 3-4 sentences.
+
+PARAGRAPH 4 — THE CONSEQUENCE (if nothing changes)
+One short paragraph. What does this pattern cost them? Be honest, not dramatic. Make it real and personal. 2-3 sentences.
+
+PARAGRAPH 5 — THE ONE HONEST NEXT STEP
+Not a pep talk. Not a list. One specific thing — the real move. Short. Direct. End it there.
+
+## TONE & RULES
+- Talk directly to them ("you"). Warm but straight.
+- Use their actual words where it fits — quote them back to themselves.
+- Short sentences. Plain language. No big words, no poetry, no therapy-speak.
+- No markdown, no headings, no bullet points.
+- 250-350 words total.`;
+}
+
+export function fullReportMessages(history: Exchange[]) {
+  const transcript = history
+    .map((ex, i) => `Q${i + 1}: ${ex.question}\nThem: ${ex.answer}`)
+    .join("\n\n");
+  return [
+    {
+      role: "user" as const,
+      content: `Here is the full interview:\n\n${transcript}\n\nNow write their diagnostic report.`,
     },
   ];
 }
