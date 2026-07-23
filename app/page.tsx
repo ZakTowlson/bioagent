@@ -459,37 +459,38 @@ function Result({
           <p className="mt-3 font-sans text-xs text-foreground/30">No spam. Unsubscribe any time.</p>
         </div>
       ) : (
-        <div className="mb-10">
-          <p className="mb-5 font-sans text-xs uppercase tracking-[0.3em] text-accent">
-            Your Full Report
-          </p>
-          <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
-            {report
-              ? report.split("\n").filter(Boolean).map((p, i) => <p key={i}>{p}</p>)
-              : <p>Your report has been sent to your email. Read it slowly when you have a quiet moment.</p>
-            }
+        <>
+          <div className="mb-10">
+            <p className="mb-5 font-sans text-xs uppercase tracking-[0.3em] text-accent">
+              Your Full Report
+            </p>
+            <div className="space-y-4 font-serif text-lg leading-relaxed text-foreground/90">
+              {report
+                ? report.split("\n").filter(Boolean).map((p, i) => <p key={i}>{p}</p>)
+                : <p>Your report has been sent to your email. Read it slowly when you have a quiet moment.</p>
+              }
+            </div>
           </div>
-        </div>
 
-        {/* CTA — only shown after report unlocks */}
-        <div className="mt-8 rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center">
-          <p className="mb-1 font-sans text-xs uppercase tracking-[0.25em] text-accent">
-            Ready to break the cycle?
-          </p>
-          <h3 className="mb-2 font-serif text-xl">Work with me directly</h3>
-          <p className="mb-5 font-sans text-sm text-foreground/60 max-w-sm mx-auto leading-relaxed">
-            DM me <span className="font-semibold text-accent">REBUILD</span> on Instagram and I&apos;ll send you a personalised voicenote based on your results.
-          </p>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
-          >
-            DM REBUILD on Instagram →
-          </a>
-        </div>
-      </div>
+          {/* CTA — only shown after report unlocks */}
+          <div className="mt-8 rounded-2xl border border-foreground/10 bg-foreground/5 p-6 text-center">
+            <p className="mb-1 font-sans text-xs uppercase tracking-[0.25em] text-accent">
+              Ready to break the cycle?
+            </p>
+            <h3 className="mb-2 font-serif text-xl">Work with me directly</h3>
+            <p className="mb-5 font-sans text-sm text-foreground/60 max-w-sm mx-auto leading-relaxed">
+              DM me <span className="font-semibold text-accent">REBUILD</span> on Instagram and I&apos;ll send you a personalised voicenote based on your results.
+            </p>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+            >
+              DM REBUILD on Instagram →
+            </a>
+          </div>
+        </>
       )}
 
     </div>
