@@ -221,31 +221,31 @@ Sub-scores (out of 100, higher = stronger):
 - Consistency: ${subScores.consistency}
 - Action Taking: ${subScores.actionTaking}
 
-Write their full diagnostic report. This is the payoff — say the thing they haven't been able to say to themselves. Make them feel more understood than they've felt by anyone.
+Write their full diagnostic report. This is the payoff. Your only job is to make them feel deeply understood — like someone finally gets them — and leave them with just enough insight into WHY they are the way they are that they want to understand more. Do NOT sell anything. Do NOT push them anywhere. Just give them real value and leave them thinking.
 
-## STRUCTURE (follow this exactly, no headings, just flow):
+## STRUCTURE (follow this exactly, no headings, no labels, just flowing paragraphs):
 
-PARAGRAPH 1 — WHAT YOUR ANSWERS REVEALED
-What did their specific answers show? Reference their actual words and phrases. Name the pattern directly and without softening it. 3-4 sentences.
+PARAGRAPH 1 — THE MIRROR
+Describe their primary pattern in a way that feels like a mirror held up to their face. Not a clinical definition — a lived experience. What does a typical day inside their head actually look like? What do they tell themselves? What do they do instead of what they know they should do? Make them think "how does he know this about me?" Reference their specific answers and words. 3-4 sentences.
 
-PARAGRAPH 2 — WHAT YOU DIDN'T SAY (but I noticed)
-What were they circling around but not saying directly? What did the shape of their answers reveal that the words didn't? What did they avoid, minimise, or not complete? 2-3 sentences.
+PARAGRAPH 2 — WHAT YOUR ANSWERS ACTUALLY SHOWED
+What did the shape of their answers reveal beyond the words? What were they circling around but not quite saying? What did they minimise, avoid, or not finish? Be specific — use what they actually said. 2-3 sentences.
 
-PARAGRAPH 3 — THE HIDDEN PATTERN
-The deeper mechanics of why this pattern exists and persists. Why it made sense at some point. Why it now works against them. Be specific to their archetype combination. 3-4 sentences.
+PARAGRAPH 3 — WHY THIS PATTERN EXISTS (the glimpse)
+Give them a glimpse — just a glimpse — of where this pattern came from and why it made sense at some point. This is the moment they feel understood at a deeper level. Don't solve it. Don't explain the whole thing. Just name the root enough that they feel it land. Be specific to their archetype combination and sub-scores. 3-4 sentences.
 
-PARAGRAPH 4 — THE CONSEQUENCE (if nothing changes)
-One short paragraph. What does this pattern cost them? Be honest, not dramatic. Make it real and personal. 2-3 sentences.
+PARAGRAPH 4 — WHAT THIS IS COSTING THEM
+Not dramatic. Not a lecture. Just honest. What is this pattern quietly taking from them? What version of themselves are they not becoming because of it? 2-3 sentences.
 
-PARAGRAPH 5 — THE ONE HONEST NEXT STEP
-Not a pep talk. Not a list. One specific thing — the real move. Short. Direct. End it there.
+PARAGRAPH 5 — THE OPEN DOOR (no CTA, just curiosity)
+End with a short paragraph that leaves them wanting more — not by selling anything, but by naming that there is more to understand about themselves. Make them feel like they've just seen the first page of something much bigger. 2-3 sentences. Do not mention coaching, programs, or next steps. Just leave them curious and energised.
 
 ## TONE & RULES
-- Talk directly to them ("you"). Warm but straight.
-- Use their actual words where it fits — quote them back to themselves.
+- Talk directly to them ("you"). Warm but straight. Like a mentor who sees them clearly.
+- Quote their actual words back to them where it fits naturally.
 - Short sentences. Plain language. No big words, no poetry, no therapy-speak.
-- No markdown, no headings, no bullet points.
-- 250-350 words total.`;
+- No markdown, no headings, no bullet points, no labels.
+- 300-400 words total.`;
 }
 
 export function fullReportMessages(history: Exchange[]) {
