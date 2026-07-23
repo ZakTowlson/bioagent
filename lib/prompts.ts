@@ -221,31 +221,40 @@ Sub-scores (out of 100, higher = stronger):
 - Consistency: ${subScores.consistency}
 - Action Taking: ${subScores.actionTaking}
 
-Write their full diagnostic report. This is the payoff. Your only job is to make them feel deeply understood — like someone finally gets them — and leave them with just enough insight into WHY they are the way they are that they want to understand more. Do NOT sell anything. Do NOT push them anywhere. Just give them real value and leave them thinking.
+Write their full diagnostic report. This is the payoff. Make them feel understood at a level they have never experienced before. Leave them with precise insight into what is driving their behaviour and why — but not the full picture. They should finish reading thinking "I've never had anyone explain me like this" and "there must be more to discover."
 
-## STRUCTURE (follow this exactly, no headings, no labels, just flowing paragraphs):
+Do NOT sell anything. Do NOT mention next steps, coaching, or programs. Simply deliver value so precise it creates its own pull.
 
-PARAGRAPH 1 — THE MIRROR
-Describe their primary pattern in a way that feels like a mirror held up to their face. Not a clinical definition — a lived experience. What does a typical day inside their head actually look like? What do they tell themselves? What do they do instead of what they know they should do? Make them think "how does he know this about me?" Reference their specific answers and words. 3-4 sentences.
+## STRUCTURE (no headings, no labels, flowing paragraphs only):
 
-PARAGRAPH 2 — WHAT YOUR ANSWERS ACTUALLY SHOWED
-What did the shape of their answers reveal beyond the words? What were they circling around but not quite saying? What did they minimise, avoid, or not finish? Be specific — use what they actually said. 2-3 sentences.
+PARAGRAPH 1 — SURFACE BEHAVIOUR (the mirror)
+Describe exactly what their day-to-day pattern looks like from the inside. Not what they do — what it feels like to be them. The internal loop they run. The specific moment the pattern kicks in. Reference their actual words and answers. Make them think "how does he know this?" Short, direct sentences. 3-4 sentences.
 
-PARAGRAPH 3 — WHY THIS PATTERN EXISTS (the glimpse)
-Give them a glimpse — just a glimpse — of where this pattern came from and why it made sense at some point. This is the moment they feel understood at a deeper level. Don't solve it. Don't explain the whole thing. Just name the root enough that they feel it land. Be specific to their archetype combination and sub-scores. 3-4 sentences.
+PARAGRAPH 2 — THE HIDDEN EMOTIONAL PATTERN
+Go one layer deeper. What emotion is running underneath the behaviour? Not what they said — what their answers revealed that they didn't say. What did they minimise, avoid, or leave unfinished? Name it precisely. No hedging — confident, accurate observations only. 2-3 sentences.
 
-PARAGRAPH 4 — WHAT THIS IS COSTING THEM
-Not dramatic. Not a lecture. Just honest. What is this pattern quietly taking from them? What version of themselves are they not becoming because of it? 2-3 sentences.
+PARAGRAPH 3 — THE IDENTITY CONFLICT
+Name the gap between who they present themselves as and who they actually feel they are. This is the tension that drives the pattern. Be specific to their archetype combination. Make it uncomfortably accurate. 2-3 sentences.
 
-PARAGRAPH 5 — THE OPEN DOOR (no CTA, just curiosity)
-End with a short paragraph that leaves them wanting more — not by selling anything, but by naming that there is more to understand about themselves. Make them feel like they've just seen the first page of something much bigger. 2-3 sentences. Do not mention coaching, programs, or next steps. Just leave them curious and energised.
+PARAGRAPH 4 — HOW THIS PATTERN FORMED
+Give a precise explanation of where this pattern came from and why it made complete sense at the time it was created. Do not blame anyone. Do not use therapy-speak. Just explain the mechanism clearly — so they feel seen at a deep level for the first time. 3-4 sentences.
+
+PARAGRAPH 5 — THE INVISIBLE COST
+Show concretely what this pattern is quietly taking from them. Be specific — confidence, decisions, relationships, money, opportunities, self-respect, time. Not dramatic. Not a lecture. Just accurate and honest. 2-3 sentences.
+
+PARAGRAPH 6 — WHY IT KEEPS REPEATING
+Explain the exact mechanism that keeps this pattern locked in place. Why good intentions are not enough to break it. Why they have tried before and ended up back here. This should feel like a key turning in a lock. 2-3 sentences.
+
+PARAGRAPH 7 — THE OPEN LOOP
+End with 2-3 sentences that leave them feeling they have only seen the first layer of something much deeper. Do not mention anything to buy or do. Simply make them feel that what was uncovered here is the beginning — and that there are layers of themselves still hidden that this assessment only gestured at.
 
 ## TONE & RULES
-- Talk directly to them ("you"). Warm but straight. Like a mentor who sees them clearly.
-- Quote their actual words back to them where it fits naturally.
-- Short sentences. Plain language. No big words, no poetry, no therapy-speak.
-- No markdown, no headings, no bullet points, no labels.
-- 300-400 words total.`;
+- Address them directly ("you") throughout. Warm but direct. No flattery.
+- Use their exact words and phrases back at them where it lands naturally.
+- Short sentences. Plain language. Zero therapy-speak, zero motivational language, zero spiritual language, zero fluff.
+- Every sentence must either reveal something, increase tension, or deepen curiosity. Cut anything that does not do one of those three things.
+- No markdown, no headings, no bullet points, no labels in the output.
+- 350-450 words total.`;
 }
 
 export function fullReportMessages(history: Exchange[]) {
