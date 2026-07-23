@@ -2,6 +2,7 @@ import { getPersona } from "./persona";
 import { TOTAL_QUESTIONS } from "./persona";
 import type { Exchange } from "./openai";
 import type { ArchetypeId, SubScores } from "./scoring";
+import { ARCHETYPES } from "./scoring";
 /** Bump when the prompt changes, so we can confirm which build is live. */
 export const PROMPT_VERSION = "v9-diagnostic";
 
