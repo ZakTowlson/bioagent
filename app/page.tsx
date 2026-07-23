@@ -26,6 +26,8 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [insight, setInsight] = useState<InsightResult | null>(null);
@@ -92,14 +94,19 @@ export default function Home() {
 
   async function unlockReport() {
     if (!insight || reportLoading || reportUnlocked) return;
+    const email = emailInput.trim();
+    const name = nameInput.trim();
+    if (!email || !email.includes("@") || !name) return;
+    setLeadEmail(email);
+    setLeadName(name);
     setReportLoading(true);
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: leadName,
-          email: leadEmail,
+          name,
+          email,
           history,
           primaryArchetype: insight.primaryArchetype,
           secondaryArchetype: insight.secondaryArchetype,
@@ -123,13 +130,27 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
       {stage === "capture" && (
-        <Capture
-          name={leadName}
-          email={leadEmail}
-          setName={setLeadName}
-          setEmail={setLeadEmail}
-          onSubmit={startInterview}
-        />
+        <div className="mx-auto w-full max-w-md text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/soul-ark-logo.png" alt="Soul Ark" className="mx-auto mb-4 h-12 w-12 object-contain" />
+          <p className="mb-3 text-sm uppercase tracking-[0.3em] text-accent">The Soul Audit</p>
+          <h1 className="mb-4 font-serif text-4xl leading-tight sm:text-5xl">
+            Why are you still stuck?
+          </h1>
+          <p className="mb-2 font-sans text-base text-foreground/70">
+            You know you&apos;re capable of more. This finds out exactly what&apos;s in the way.
+          </p>
+          <p className="mb-10 font-sans text-sm text-foreground/40">
+            10 questions. Diagnostic score. Free.
+          </p>
+          <button
+            onClick={startInterview}
+            className="rounded-full bg-accent px-10 py-3.5 font-sans text-sm font-semibold text-background transition hover:opacity-90"
+          >
+            Start the audit →
+          </button>
+          <p className="mt-4 font-sans text-xs text-foreground/30">Takes 5 minutes. No signup required.</p>
+        </div>
       )}
 
       {stage === "interview" && (
@@ -156,6 +177,10 @@ export default function Home() {
           reportLoading={reportLoading}
           error={error}
           name={leadName}
+          nameInput={nameInput}
+          setNameInput={setNameInput}
+          emailInput={emailInput}
+          setEmailInput={setEmailInput}
           onUnlock={unlockReport}
         />
       )}
@@ -163,74 +188,6 @@ export default function Home() {
   );
 }
 
-function Capture({
-  name,
-  email,
-  setName,
-  setEmail,
-  onSubmit,
-}: {
-  name: string;
-  email: string;
-  setName: (v: string) => void;
-  setEmail: (v: string) => void;
-  onSubmit: () => void;
-}) {
-  const [error, setError] = useState("");
-
-  function handleSubmit() {
-    if (!name.trim()) { setError("Please enter your name."); return; }
-    if (!email.trim() || !email.includes("@")) { setError("Please enter a valid email."); return; }
-    onSubmit();
-  }
-
-  return (
-    <div className="mx-auto w-full max-w-md text-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/soul-ark-logo.png" alt="Soul Ark" className="mx-auto mb-4 h-12 w-12 object-contain" />
-      <p className="mb-3 text-sm uppercase tracking-[0.3em] text-accent">
-        The Soul Audit
-      </p>
-      <h1 className="mb-4 font-serif text-4xl leading-tight sm:text-5xl">
-        Why are you still stuck?
-      </h1>
-      <p className="mb-2 font-sans text-base text-foreground/70">
-        You know you&apos;re capable of more. This finds out exactly what&apos;s in the way.
-      </p>
-      <p className="mb-8 font-sans text-sm text-foreground/40">
-        10 questions. Diagnostic score. Free.
-      </p>
-      <div className="flex flex-col gap-3 text-left">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your first name"
-          autoFocus
-          className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent"
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Your email"
-          onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
-          className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent"
-        />
-        {error && <p className="font-sans text-sm text-red-400">{error}</p>}
-        <button
-          onClick={handleSubmit}
-          className="rounded-full bg-accent px-7 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90"
-        >
-          Start the audit →
-        </button>
-      </div>
-      <p className="mt-4 font-sans text-xs text-foreground/30">
-        No spam. Your results are sent to your email.
-      </p>
-    </div>
-  );
-}
 
 function Interview({
   index,
@@ -356,6 +313,10 @@ function Result({
   reportLoading,
   error,
   name,
+  nameInput,
+  setNameInput,
+  emailInput,
+  setEmailInput,
   onUnlock,
 }: {
   insight: InsightResult | null;
@@ -364,6 +325,10 @@ function Result({
   reportLoading: boolean;
   error: string;
   name: string;
+  nameInput: string;
+  setNameInput: (v: string) => void;
+  emailInput: string;
+  setEmailInput: (v: string) => void;
   onUnlock: () => void;
 }) {
   if (error && !insight) {
@@ -464,15 +429,34 @@ function Result({
             What&apos;s really driving this pattern?
           </h3>
           <p className="mb-6 font-sans text-sm text-foreground/60 max-w-sm mx-auto leading-relaxed">
-            Your full report includes what your answers actually revealed, what you didn&apos;t say, the hidden pattern underneath, and your honest next step.
+            Enter your email to unlock your full report — what your answers revealed, the hidden pattern underneath, and your honest next step.
           </p>
-          <button
-            onClick={onUnlock}
-            disabled={reportLoading}
-            className="rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-60"
-          >
-            {reportLoading ? "Generating your report…" : "Unlock my full report →"}
-          </button>
+          <div className="flex flex-col gap-3 max-w-xs mx-auto">
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="Your first name"
+              autoFocus
+              className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent text-center"
+            />
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") onUnlock(); }}
+              placeholder="Your email address"
+              className="w-full rounded-lg border border-foreground/15 bg-foreground/5 px-4 py-3 font-sans text-base text-foreground outline-none transition focus:border-accent text-center"
+            />
+            <button
+              onClick={onUnlock}
+              disabled={reportLoading || !emailInput.trim() || !nameInput.trim()}
+              className="rounded-full bg-accent px-8 py-3 font-sans text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-40"
+            >
+              {reportLoading ? "Generating your report…" : "Unlock my full report →"}
+            </button>
+          </div>
+          <p className="mt-3 font-sans text-xs text-foreground/30">No spam. Unsubscribe any time.</p>
         </div>
       ) : (
         <div className="mb-10">
